@@ -1,0 +1,31 @@
+{
+    "botones": {
+        "nuevo": "Neue registrierung",
+        "editar": "Datensatz bearbeiten",
+        "borrar": "Protokoll löschen",
+        "cancelar": "Abbrechen",
+        "actualizar": "Aktualisieren",
+        "guardar": "Speichern"
+    },
+    "administrador": "VERWALTUNGSSEITE",
+    "titulo": "Bi-Plattform-Verwaltungsportal",
+    "menu": {
+        "usuarios": "Benutzer",
+        "catalogos": "Kataloge",
+        "subida_informes": "Bericht hochladen",
+        "subida_datos": "Daten-Upload",
+        "dashboard": "Armaturenbrett"
+    },
+    "mensajes": {
+        "cambio_idioma": "Sprache wurde geändert"
+    },
+    "formularios": {
+        "catalogos": {
+            "indicadores": {
+                "id": "gehen",
+                "descripcion": "Bezeichnung"
+            }
+        }
+    }
+
+}

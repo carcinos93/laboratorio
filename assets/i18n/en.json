@@ -1,0 +1,19 @@
+ {
+     "botones": {
+         "siguiente": "Next",
+         "anterior": "Previous",
+         "nuevo": "new record",
+         "editar": "edit record",
+         "borrar": "clear record",
+         "cancelar": "cancel",
+         "actualizar": "update",
+         "guardar": "save",
+         "cerrar_sesion": "logout"
+     },
+     "administrador": "administrator",
+     "titulo": "Bi platform administrative portal",
+     "menu": { "usuarios": "users", "catalogos": "catalogues", "subida_informes": "increase in reports", "subida_datos": "data upload", "dashboard": "board" },
+     "submenu": { "usuarios": { "usuario": "user", "rol": "role", "perfil": "profile" }, "catalogos": { "indicadores": "indicators", "grupo-indicador": "Indicators group", "indicadores-empresa": "Business indicators", "region": "region", "pais": "country", "departamentos": "departments", "sector-economico": "economic sector", "productos": "products", "actividades-economicas": "economic activities", "fuentes-informacion": "sources of information", "tipo-empresa": "type of company", "importaciones": "imports", "exportaciones": "exports", "precio": "price", "aranceles": "tariffs", "productos_pais": "products by country", "exportaciones_pais": "exports by country", "importaciones_pais": "imports by country", "exportaciones_producto": "exports by product", "importaciones_producto": "Importaciones por producto" }, "subida_informes": { "crear_informe": "Crea informe", "administratar_informe": "administer report" }, "subida_datos": { "cargar_archivo": "file charge" }, "dashboard": { "estadisticas": "statistics", "productos": "products" } },
+     "mensajes": { "cambio_idioma": "language has been changed", "requerido": "field is required", "usuario_novalido": "the user or password is invalid", "no_login": "is not authenticated" },
+     "formularios": { "usuarios": { "usuario": { "nombre": "user name", "correo": "electronic mail", "estado": "status", "password": "password" } }, "catalogos": { "indicadores": { "id": "id", "descripcion": "description" }, "pais": { "nombre_pais": "name", "superficie": "surface area", "codigo_divisa": "currency code", "iso2": "iso 2", "iso3": "iso 3" }, "grupo_indicador": { "nombre": "name" }, "departamento": { "nombre": "name", "pais": "country" }, "fuente_informacion": { "fuente_informacion": "Source of information" }, "sector_economico": { "sector_economico": "economic sector" }, "tipo_empresa": { "tipo_empresa": "type of company" }, "region": { "nombre_region": "name" }, "actividades_economicas": { "actividad": "economic activity" } } }
+ }

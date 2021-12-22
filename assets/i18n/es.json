@@ -1,0 +1,205 @@
+{
+    "botones": {
+        "nuevo": "Nuevo registro",
+        "editar": "Editar registro",
+        "borrar": "Borrar registro",
+        "cancelar": "Cancelar",
+        "actualizar": "Actualizar",
+        "guardar": "Guardar",
+        "cerrar_sesion": "Cerrar sesión",
+        "siguiente": "Siguiente",
+        "anterior": "Anterior",
+        "recargar": "Recargar datos"
+    },
+    "mensajes": {
+        "cambio_idioma": "Idioma ha sido cambiado",
+        "requerido": "Campo es requerido",
+        "usuario_novalido": "El usuario o contraseña no son validos",
+        "no_login": "No esta autenticado",
+        "confirmar_borrar": "¿Desea borrar el registro?",
+        "cuadroDialogo": {
+            "confirmar": "Confirmar",
+            "si": "Si",
+            "no": "No"
+        }
+    },
+    "administrador": "ADMINISTRADOR",
+    "titulo": "portal administrativo de plataforma bi",
+    "menu": {
+        "usuarios": "USUARIOS",
+        "catalogos": "Cátalogos",
+        "subida_informes": "Subida de informes",
+        "subida_datos": "Subida de datos",
+        "dashboard": "Tablero"
+    },
+    "submenu": {
+        "usuarios": {
+            "usuario": "Usuario",
+            "rol": "Rol",
+            "perfil": "Pérfil",
+            "menu": "Menu"
+        },
+        "catalogos": {
+            "indicadores": "Indicadores",
+            "grupo-indicador": "Grupo indicadores",
+            "indicadores-empresa": "Indicadores Empresas",
+            "region": "Región",
+            "pais": "País",
+            "departamentos": "Departamentos",
+            "sector-economico": "Sector ecónomico",
+            "productos": "Productos",
+            "documentos": "Documentos",
+            "servicios": "Servicios",
+            "actividades-economicas": "Actividades económicas",
+            "fuentes-informacion": "Fuentes de información",
+            "documento-servicio": "Documento x servicios",
+            "tipo-empresa": "Tipo de empresa",
+            "importaciones": "Importaciones",
+            "exportaciones": "Exportaciones",
+            "precio": "Precio",
+            "aranceles": "Aranceles",
+            "productos_pais": "Productos por país",
+            "exportaciones_pais": "Exportaciones por país",
+            "importaciones_pais": "Importaciones por país",
+            "exportaciones_producto": "Exportaciones por producto",
+            "importaciones_producto": "Importaciones por producto"
+        },
+        "subida_informes": {
+            "crear_informe": "Crea informe",
+            "administratar_informe": "Administrar informe"
+        },
+        "subida_datos": {
+            "cargar_archivo": "Cargo de archivos"
+        },
+        "dashboard": {
+            "inflacion": "Inflación",
+            "inversion-extranjera": "Inversión Extranjera",
+            "poblacion-total-pais": "Población total por país",
+            "poblacion-genero-pais": "Poblacíon por genero y país",
+            "cantidad-empresas": "Cantidad de empresas",
+            "exportaciones-primera-fecha": "Exportaciones y primera fecha: Fuente por País",
+            "importaciones-primera-fecha": "Importaciones y primera fecha: Fuente por País",
+            "ipc-pais-indicador": "Indice de precios al consumidor por país e indicador"
+        }
+    },
+    "formularios": {
+        "usuarios": {
+            "usuario": {
+                "nombre": "Nombre de usuario",
+                "correo": "Correo electrónico",
+                "estado": "Estado",
+                "password": "Contraseña"
+            },
+            "rol": {
+                "nombre": "Nombre",
+                "estado": "Estado"
+            }
+        },
+        "subida_informes": {
+            "informe": {
+                "titulo": "Titulo del blog",
+                "descripcion": "Descripción del blog",
+                "imagen": "Imagen"
+            }
+        },
+        "tb": {
+            "indicador": {
+                "fuente": "Fuente",
+                "pais": "País",
+                "indicador": "Indicador",
+                "anio": "Año",
+                "valor1": "Valor 1",
+                "valor2": "Valor 2"
+            },
+            "producto": {
+                "sector": "Sector ecónomico",
+                "nombre": "Nombre",
+                "logo": "Logo",
+                "estatus": "Estado",
+                "acceso": "Acceso"
+            },
+            "documento_servicio": {
+                "producto": "Producto",
+                "servicio": "Servicio",
+                "grupo": "Grupo",
+                "documento": "Documento"
+            },
+            "documento": {
+                "producto": "Producto",
+                "descripcion": "Descripción",
+                "estatus": "Estado",
+                "acceso": "Acceso",
+                "contenido": "Contenido",
+                "palabras": "Palabras claves",
+                "servicios": "Servicios",
+                "grupos": "Grupos"
+            },
+            "documento_grupo": {
+                "grupo": "Grupo",
+                "estatus": "Estado"
+            },
+            "palabra_clave": {
+                "palabra": "Palabra clave",
+                "estatus": "Estado"
+            },
+            "servicios": {
+                "servicio": "Servicio",
+                "estatus": "Estado"
+            }
+        },
+        "catalogos": {
+            "indicadores": {
+                "nombre": "Título del indicador",
+                "unidad": "Unidad de medida",
+                "grupo_indicador": "Grupo de indicador",
+                "etiqueta1": "Etiqueta 1",
+                "etiqueta2": "Etiqueta 2"
+            },
+            "pais": {
+                "nombre_pais": "Nombre",
+                "superficie": "Superficie",
+                "codigo_divisa": "Código divisa",
+                "iso2": "ISO 2",
+                "iso3": "ISO 3"
+            },
+            "grupo_indicador": {
+                "nombre": "Nombre"
+            },
+            "departamento": {
+                "nombre": "Nombre",
+                "pais": "País"
+            },
+            "fuente_informacion": {
+                "fuente_informacion": "Fuente de información"
+            },
+            "sector_economico": {
+                "sector_economico": "Sector económico",
+                "descripcion": "Descripción",
+                "identificador": "Identificador",
+                "logo": "Logo",
+                "estatus": "Estado",
+                "acceso": "Acceso"
+            },
+            "tipo_empresa": {
+                "tipo_empresa": "Tipo de empresa"
+            },
+            "region": {
+                "nombre_region": "Nombre"
+            },
+            "actividades_economicas": {
+                "actividad": "Actividad económica"
+            },
+            "servicios": {
+                "nombre": "Nombre",
+                "descripcion": "Descripción",
+                "logo": "Logo",
+                "estatus": "Estado",
+                "acceso": "Acceso"
+
+            }
+
+
+        }
+    }
+
+}

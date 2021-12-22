@@ -1,0 +1,37 @@
+.p-dropdown{display:inline-flex;cursor:pointer;position:relative;-webkit-user-select:none;-ms-user-select:none;user-select:none}.p-dropdown-clear-icon{position:absolute;top:50%;margin-top:-.5rem}.p-dropdown-trigger{display:flex;align-items:center;justify-content:center;flex-shrink:0}.p-dropdown-label{display:block;white-space:nowrap;overflow:hidden;flex:1 1 auto;width:1%;text-overflow:ellipsis;cursor:pointer}.p-dropdown-label-empty{overflow:hidden;visibility:hidden}input.p-dropdown-label{cursor:default}.p-dropdown .p-dropdown-panel{min-width:100%}.p-dropdown-panel{position:absolute;top:0;left:0}.p-dropdown-items-wrapper{overflow:auto}.p-dropdown-item{cursor:pointer;font-weight:normal;white-space:nowrap;position:relative;overflow:hidden}.p-dropdown-items{margin:0;padding:0;list-style-type:none}.p-dropdown-filter{width:100%}.p-dropdown-filter-container{position:relative}.p-dropdown-filter-icon{position:absolute;top:50%;margin-top:-.5rem}.p-fluid .p-dropdown{display:flex}.p-fluid .p-dropdown .p-dropdown-label{width:1%}
+    .contenedor-dinamico .elemento-contenedor:hover {
+        background-color: rgba(241, 138, 0, 1);
+        transform: scale(1.4,1.4);
+    }
+    .elemento-contenedor {  border-radius: 5px; }
+	.p-border-2 { border-radius: 5px  } 
+    .p-w-100 { width: 100% !important;  }
+    .color-azul {  color: #135fa7 !important; }
+	.color-naranja { color: rgba(241, 138, 0, 1) !important; }
+    .p-dropdown {  border: 1px solid #135fa7;  }
+    .border-blue {  border: 1px solid #135fa7;  }
+    .p-text-white { color: white !important;  }
+    .bg-azul {  background-color: #135fa7 !important; }
+	.bg-naranja { background-color: rgba(241, 138, 0, 1) !important; }
+    .pi-2x { font-size: 2rem; }
+    .pi-1_5x { font-size: 1.5rem; }
+    .btn-dinamico {
+        border: 1px solid #135fa7;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        cursor: pointer;
+        color: white;
+        border-radius: 5px;
+    }
+    .btn-2 {  background-color: rgba(241, 138, 0, 1);  }
+    .p-button { color: #fff !important; /*padding: 15px 32px; !important;*/  }
+    .p-position-absolute { position: absolute; }
+    .p-position-relative { position: relative; }
+    .bg-white { background-color: #ffffff
+    }
+    /*.p-input-icon-left > .p-inputtext { padding-left: 2rem;  }
+    .p-input-icon-right > .p-inputtext { padding-right: 2rem;  }*/
+    .contenedor-dinamico .elementor-icon { border:none !important; }
+    @media (min-width: 768px) {
+        .p-col-md { max-width: 100%; flex-basis: 0; flex-grow: 1; }
+    }

@@ -1,0 +1,93 @@
+/* You can add global styles to this file, and also import other style files */
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+
+/** MENU **/
+
+.nav-item .nav-item {
+    font-size: 0.75rem;
+    margin-left: 25px;
+}
+
+.nav-item .nav-item:hover {
+    background-color: #f18a00 !important;
+}
+
+.menu .nav-link .fa {
+    color: #f18a00;
+}
+
+.menu {
+    background-color: #12549d;
+}
+
+.menu a {
+    color: white;
+}
+
+.mat-step-label {
+    color: black !important;
+}
+
+a.disabled {
+    /* Make the disabled links grayish*/
+    color: rgb(116, 116, 116) !important;
+    /* And disable the pointer events */
+    pointer-events: none !important;
+    cursor: not-allowed;
+}
+
+.menu .nav-link:focus,
+.menu .nav-link:hover {
+    color: white !important;
+}
+
+.menu .navbar-toggler:focus {
+    box-shadow: 0 0 0 0;
+}
+
+.menu .nav-item:not(.nav-item .nav-item):not(:first-child) {
+    border-bottom: 1px solid rgb(36, 36, 36);
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.menu .nav-link:not(.collapsed) .fa-caret-down {
+    display: none !important;
+}
+
+.menu .nav-link.collapsed .fa-caret-up {
+    display: none !important;
+}
+
+.cdk-overlay-container {
+    z-index: 9999999 !important;
+}
+
+.p-dialog.p-confirm-dialog,
+p-confirmdialog .p-dialog-mask.p-component-overlay {
+    z-index: 99999 !important;
+}
+
+
+/** FORMULARIO CONTENEDOR**/
+
+.formulario {
+    margin: 0.5rem;
+    box-shadow: 0 0 3px rgb(48, 48, 48);
+    width: 90%;
+    padding: 1.5rem;
+}
+
+.bg-white {
+    background-color: white;
+}
