@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "orclapex-js": "github:fuzziebrain/orclapex-js",
     "typescript": "^4.5.4"
   }
 }
