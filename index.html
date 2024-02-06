@@ -18,24 +18,72 @@
     <textarea name="palabras" id="palabras" cols="30" rows="10"></textarea>
     <span id="contador"></span>
     <div id="contenedor"></div>
-    <table> 
+    <table id="tabla"> 
         <thead>
             <tr>
                 <th> RESULTADO </th>
             </tr>
         </thead>
+        <tbody>
+            <tr data-id="1">
+                <td class="opciones"></td>
+            </tr>
+        </tbody>
     </table>
     <div class="plg_radio_group" data-lista-valores="normal=normal:anormal=anormal" data-valor="normal" 
     data-id="1"></div>
-
+    <input type="hidden" value="#MINUTO_1#">
     <script >
         var exports = {};
     </script>
     <script src="js/jquery.min.js"></script>
     <script src="js/handlebars.min.js"></script>
-    <script src="js/plugin.js"></script>
+    <script src="js/plugin.js?v1.3"></script>
     <script >
-        (function ($) {
+        function perfil(nombre,  edad,  cargo) {
+            alert(nombre + ' ' + edad + ' ' + cargo)
+        }
+        var mensaje = new Promise(function (resolve, reject) {
+            setTimeout(()  => { 
+                 resolve('hecho');
+            },  5000)
+         });
+        $("#palabras").on('change', async function (e) {
+            var $this = $(this);
+            var m = await mensaje;
+            $this.after(`<span> ${m} </span>`);
+        });
+
+        var clase = {
+            valido: async function () {
+                var reglas = [];
+
+                for (var i = 0, total = 2; i <= total; i++) {
+
+                    var r = await mensaje;
+                    reglas.push(r);
+                }
+                console.log(reglas);
+            }
+        };
+
+    
+ 
+
+        /*(function ($) {
+
+            $("#tabla tbody tr td.opciones").each(function (i, e) {
+                var $this = $(e);
+                var id = $this.parent().data('id');
+                $this.tabla_radiogroup({
+                    nombre: 'CAMPO' + i.toString(),
+                    opciones: [['m', 'masculino'],  ['f', 'femenino']],
+                    valor: 'm',
+                    onchange: function (e) {
+                        console.log(id, e);
+                    }
+                });
+            }) 
             $("#palabras").on('keypress', function (e)  {
                 var $el = $(this);
                 var palabras = $el.val().split(" ").length;
@@ -52,79 +100,10 @@
 
 
 
-        } )($);
+        } )($);*/
         /**$("#contenedor").carusel( {} );*/
     
 
-
-        $(".LST_OPCIONES").each(function (index, elemen) {
-
-var $this = $(this);
-var id = $this.data('id');
-$this.on('click', function (event) {
-      apex.server.process(
-                'update_examen',
-                {
-                    x01: parseInt(id),
-                },
-                {
-                    dataType: 'text', 
-                    success: function(data){
-                        apex.region("REPORTE").refresh();
-                        console.log(data);
-                    }
-                }
-            );     
-});
-/*var data = apex.item($this.data('list')).getValue().split(":").map(function (v) {
-    var v_arr = v.split("=");
-    return v_arr;
-});*/
-
-function inicializar_examenes(id_tabla) {
-    apex.item(id_tabla).element.find("tbody tr").each(function (i, elem) {
-        var $this = $(elem);
-        var contenedor = $this.find("div.LST_OPCIONES");
-        var nuevo_contenedor = $(`
-            <div class="radio_group apex-item-group apex-item-group--rc apex-item-radio">        
-                <div class="apex-item-grid radio_group">
-                <div class='apex-item-grid-row'> </div>
-            </div></div>`);
-        var items = apex.item( contenedor.data("lista_valores"))
-        .getValue()
-        .split(":")
-        .map(function (v) {
-                    var v_arr = v.split("=");
-                return v_arr;
-            });;
-
-        var nuevo_contenedor_fila = nuevo_contenedor.find(".apex-item-grid-row")
-        items.forEach(function (value, idx_1) {
-
-            var opcion = $('<div class="apex-item-option"></div>');
-            var input = $("<input/>");
-            var id_input =  'P12_RESULTADO_' + i.toString() + '_' + idx_1.toString()
-            input.attr({
-                'type':"radio",
-                'name': 'P12_RESULTADO_' + i.toString(),
-                'id':id_input,
-                'value': value[1]
-            });
-            var label = $("<label class='u-radio' for='"+ id_input +"'></label>").text(value[0]);
-            
-            opcion.append(input);
-            opcion.append(label);
-            nuevo_contenedor_fila.append(opcion);
-
-        });
-        contenedor.append(nuevo_contenedor);
-    });
-}
-    
-
-//console.log(data);
-
-});
     </script>
 </body>
 </html>
