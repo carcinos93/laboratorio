@@ -1,5 +1,6 @@
 interface ValidacionesOpts {
     metodo: string | IMetodo | ((item: any) => boolean) ;
+    es_asincrono: boolean;
     parametros?: any[];
     keyup?: boolean;
     change?: boolean;
@@ -17,7 +18,10 @@ interface IValidaciones  {
     reglas: ValidacionesOpts[];
     procesar?: boolean
 }
-
+interface IGuardado_automatico {
+    init: (pId: string, ajax_proceso: string, proceso_formulario: string ) => void;
+    inicializar_temporizador: () => void;
+}
 
 var EXCLUIR_CAMPOS = ['HIDDEN', 'DISPLAY_ONLY'];
 
@@ -52,25 +56,29 @@ const validaciones = {
     });
 }*/
 const guardado_automatico = {
-
-    proceso: '',
+    contador : 0,
+    g_campos : [],
+    ajax_proceso: '',
+    proceso_formulario: '',
     botones: '',
-    id: '',
+    id_campo: '',
     validaciones: {},
     /**
      * Inicializacion de proceso de guardado automatico
      * @param pId Nombre del item que es id 
-     * @param pProceso Proceso que enviara la informacion
-     * @param pBotones Botones 
+     * @param ajax_proceso Nombre del proceso ajax que recibira los datos
+     * @param proceso_formulario Proceso apex que guarda información del formulario
+     * @param pBotones Identificador del boton de guardado 
      * @param pValidaciones Lista de validaciones
      */
-    init: function (pId: string, pProceso: string, pBotones: string, pValidaciones: ICampoValidaciones) {
-        var $obj = this;
-        $obj.proceso = pProceso;
-        $obj.id = pId;
-        $obj.validaciones = pValidaciones;
+    init: function (pId: string, ajax_proceso: string, proceso_formulario: string , pBotones: string, pValidaciones: ICampoValidaciones) {
+        var $this = this;
+        $this.ajax_proceso = ajax_proceso;
+        $this.proceso_formulario = proceso_formulario;
+        $this.id_campo = pId;
+        $this.validaciones = pValidaciones;
         if (pBotones) {
-            apex.jQuery(pBotones).on('click', $obj.boton_onclick.bind($obj));
+            apex.jQuery(pBotones).on('click', $this.boton_onclick.bind($this));
         }
         (function (jQuery) {
             /**
@@ -82,7 +90,6 @@ const guardado_automatico = {
             var opts_default = { procesar: true, reglas: [] }; // variable por defecto
             items.forEach((item) => {
                 var data = { 'item': item }; // 
-
                 var opts = $.extend(true, pValidaciones[item.id] ?? {}, opts_default);
                 if (opts) {
                     data['validaciones'] = opts;
@@ -92,15 +99,47 @@ const guardado_automatico = {
                         /**
                         * Un textarea se espera que ingrese mas texto se utiliza el evento keyup
                         */
-                        item.element.on('keyup', data, $obj.item_keyup.bind($obj));
-                        item.element.on('change', data, $obj.item_change.bind($obj));
+                        item.element.on('keyup', data, $this.item_keyup.bind($this));
+                        item.element.on('change', data, $this.item_change.bind($this));
                     } else {
-                        item.element.on('change', data, $obj.item_change.bind($obj));
-
+                        item.element.on('change', data, $this.item_change.bind($this));
                     }
                 }
-            })
+            });
+            // Se inicializa el temporizador
+            $this.inicializar_temporizador();
+            
+            
         })(apex.jQuery);
+    },
+    /**
+     * Funcion que se encarga de ejecutar la  funcion de guardado formulario cada intervalo de tiempo
+     */
+    inicializar_temporizador() {
+        var $this = this;
+        if ($this.id_campo != null && $this.proceso_formulario != null) {
+            setInterval(function () {
+                if ( ++$this.contador >= 3 ) {
+                    $this.contador = 0;
+                    try {
+                        $this.guardar_formulario();
+                    } catch (error) {
+                        console.log(error);
+                    }
+
+                }
+            }, 1000 );
+        }
+    },
+    /**
+     * Funcion que retorna cadena de texto en el formato x01, x02 ... x10 
+     * @param i Indice
+     * @returns string
+     */
+    generador_id: function (i) {
+        var n = '0' + i.toString()
+        var id = 'x' + n.substring(n.length - 2) ;
+        return id;
     },
     /**
      * Funcion que valida el campo segun las reglas
@@ -122,7 +161,12 @@ const guardado_automatico = {
             valido = validaciones[regla.metodo](item, ...regla.parametros);
         } else if (typeof regla.metodo == "function") {
             /** si no existe la funcion en validacion se puede implentar una funcion en las reglas */
-            valido = regla.metodo(item);
+            if ( regla.es_asincrono ) {
+                valido = await regla.metodo(item);
+            } else {
+                valido = regla.metodo(item);
+            }
+
         }
 
         return valido;
@@ -149,7 +193,7 @@ const guardado_automatico = {
         }
         return mensajes;
     },
- 
+    
     item_keyup: function (e: any) {
         
     },
@@ -171,22 +215,79 @@ const guardado_automatico = {
             }   
         } );*/
     },
-    boton_onclick:  function (e) {
+    guardar_formulario: function () {
         var $this = this;
-        var items = Object.entries(apex.items).filter((v) => v[1].isChanged()).map((v) => v[1]);
-        
+        if ($this.g_campos.length==0) {
+            return;
+        }
+        /** se toman los primeros 3 campos */
+        var campos_enviar = [...$this.g_campos ].filter(function (v, i) { return i < 3 });
+        var data = { pageItems: "#" + $this.id_campo };
+    
+        var indice = 0;
+        campos_enviar.forEach(function (v, i) {
+            var item = apex.item(v);
+            /**
+             * Los campos se contruyen de la siguiente manera 
+             * x01: NOMBRE CAMPO 1
+             * x02: VALOR CAMPO 2
+             * x03: NOMBRE CAMPO 2
+             * x04: VALOR CAMPO 2
+             * hasta completar los tres campos
+             */
+            data[ $this.generador_id(++indice) ] = v; // x01: P1_CAMPO;
+            if (Array.isArray(item.getValue())) {
+                data[ generador_id(++indice) ] = item.getValue().join( item.separator ?? ";" );
+            } else {
+                data[ generador_id(++indice) ] = item.getValue() // x02: Valor de P1_CAMPO;
+            }
+        });
+        ///var v_refreshObject = campos_enviar.map((v) => "#" + v ).join(",");
+        var spinner = apex.util.showSpinner(apex.jQuery("body"));    
+        apex.server.process($this.ajax_proceso, data,{
+                success: function (resp) {
+                    if (resp['mensaje']) {
+                        /**se filtra la cola de campos dejando solo lo que no han sido enviados */
+                        $this.g_campos = $this.g_campos.filter(function (v, i) {
+                            return !campos_enviar.find((v1) => v1 == v);
+                        });
+                    }
+                    if (spinner) {
+                        spinner.remove();
+                    }
+                },
+                error: function(err) {
+                    if (spinner) {
+                        spinner.remove();
+                    }
+                }
+            }   
+        );
+    },
+    boton_onclick: function (e) {
+        var $this = this;
+        // se filtran los items que han sido cambiados y que no esten vacios
+        var items = Object.entries(apex.items).filter((v) => v[1].isChanged() && !v[1].isEmpty()).map((v) => v[1]);
+        // se ejecuta la validacion para todos los campos de manera asincrona
         (async function () {
             var mensajes_global = [];
             for (var i in items) {
                 var item = items[i];
+                // se valida el  campo
                 var mensajes = await $this.validar_campos( $this.validaciones[item.id].reglas, item);
                 mensajes_global.push(...mensajes);
             }
            return mensajes_global;
  
         })().then((v) => {
-            apex.message.clearErrors();
-            apex.message.showErrors(v);
+            /** si hay errores se muestran los mensajes */
+            if (v.length) {
+                apex.message.clearErrors();
+                apex.message.showErrors(v);
+            } else {
+                /**si todo es valido se envia el formulario */
+                apex.submit({request: $this.proceso_formulario ,validate:false});
+            }
 
         });
     }
