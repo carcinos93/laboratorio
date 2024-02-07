@@ -52,6 +52,11 @@ const validaciones = {
     });
 }*/
 const guardado_automatico = {
+
+    proceso: '',
+    botones: '',
+    id: '',
+    validaciones: {},
     /**
      * Inicializacion de proceso de guardado automatico
      * @param pId Nombre del item que es id 
@@ -61,16 +66,21 @@ const guardado_automatico = {
      */
     init: function (pId: string, pProceso: string, pBotones: string, pValidaciones: ICampoValidaciones) {
         var $obj = this;
+        $obj.proceso = pProceso;
+        $obj.id = pId;
+        $obj.validaciones = pValidaciones;
+        if (pBotones) {
+            apex.jQuery(pBotones).on('click', $obj.boton_onclick.bind($obj));
+        }
         (function (jQuery) {
             /**
              *  Se toman los campo que no esten excluidos y que comiencen con P
              */
             var items = Object.entries(apex.items)
-                .filter((v) => !EXCLUIR_CAMPOS.find((v1) => v[1].item_type == v1) && v[1].id.startsWith('P'))
-                .map((v) => v[1]);
+                .filter((v) => !EXCLUIR_CAMPOS.find((v1) => v[1].item_type == v1) && v[1].id.startsWith('P')).map((v) => v[1]);
             
             var opts_default = { procesar: true, reglas: [] }; // variable por defecto
-            items.forEach((item, index) => {
+            items.forEach((item) => {
                 var data = { 'item': item }; // 
 
                 var opts = $.extend(true, pValidaciones[item.id] ?? {}, opts_default);
@@ -92,45 +102,54 @@ const guardado_automatico = {
             })
         })(apex.jQuery);
     },
-
-    
-    validar_campos: async function (reglas: ValidacionesOpts[], item: apex.item.ItemObject) {
-        //var mensajes = [];
-        var $this = this;
-        for (var v in reglas) {
-          
-            var valido = await $this.validar_campo(reglas[v], item);
-            if (!valido) {
-                apex.message.showErrors([
-                    { 
-                    'location': 'inline',
-                    'message': reglas[v].mensaje,
-                    'pageItem': item.id
-                    }
-                ]);
-                /*mensajes.push({ 
-                    'location': 'inline',
-                    'message': reglas[v].mensaje,
-                    'pageItem': item.id
-                 });*/
-            }
-        }
-
-        ///return mensajes;
-    },
+    /**
+     * Funcion que valida el campo segun las reglas
+     * @param regla 
+     * @param item Campo del formulario
+     * @returns boolean
+     */
     validar_campo: async function (regla: ValidacionesOpts,  item: apex.item.ItemObject) {
         var valido = true;
+        
+        
         if (typeof regla.metodo  == "object") {
+            /** si es un objeto se tomara como validacion ajax */
            var respuesta = await validaciones.ajax(regla.metodo);
+           /** el metodo ajax debe retornar 1 como verdadero o 0 como falso */
            valido = respuesta == "1";
         } else if (typeof regla.metodo ==  "string") {
+            /** si es una cadena se buscara en las funciones de validacion  */
             valido = validaciones[regla.metodo](item, ...regla.parametros);
         } else if (typeof regla.metodo == "function") {
+            /** si no existe la funcion en validacion se puede implentar una funcion en las reglas */
             valido = regla.metodo(item);
         }
 
         return valido;
     },
+    validar_campos: async function (reglas: ValidacionesOpts[], item: apex.item.ItemObject) {
+        var mensajes = [];
+        var $this = this;
+        for (var v in reglas) { 
+            var valido = await $this.validar_campo(reglas[v], item);
+            if (!valido) {
+                /*apex.message.showErrors([
+                    { 
+                    'location': 'inline',
+                    'message': reglas[v].mensaje,
+                    'pageItem': item.id
+                    }
+                ]);*/
+                mensajes.push({ 
+                    'location': 'inline',
+                    'message': reglas[v].mensaje,
+                    'pageItem': item.id
+                 });
+            }
+        }
+        return mensajes;
+    },
+ 
     item_keyup: function (e: any) {
         
     },
@@ -138,15 +157,38 @@ const guardado_automatico = {
 
         var item = e.data.item as apex.item.ItemObject;
         var reglas = (e.data.validaciones as IValidaciones ).reglas;
-        apex.message.clearErrors();
-        this.validar_campos(reglas, item).then(function (r) {});
+        
+        this.validar_campos(reglas, item).then(function (mensajes) {
+            if (mensajes.length ) {
+                apex.message.clearErrors();
+                apex.message.showErrors(mensajes);
+            } 
+        });
        /* this.validar_campos(reglas, item).then(function (mensajes) {
             if (mensajes.length ) {
                 apex.message.clearErrors();
                 apex.message.showErrors(mensajes);
             }   
         } );*/
-    
+    },
+    boton_onclick:  function (e) {
+        var $this = this;
+        var items = Object.entries(apex.items).filter((v) => v[1].isChanged()).map((v) => v[1]);
+        
+        (async function () {
+            var mensajes_global = [];
+            for (var i in items) {
+                var item = items[i];
+                var mensajes = await $this.validar_campos( $this.validaciones[item.id].reglas, item);
+                mensajes_global.push(...mensajes);
+            }
+           return mensajes_global;
+ 
+        })().then((v) => {
+            apex.message.clearErrors();
+            apex.message.showErrors(v);
+
+        });
     }
 }
 /*

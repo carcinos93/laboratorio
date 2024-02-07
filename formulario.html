@@ -7,22 +7,24 @@
 </head>
 <body>
     <div>
-        <input type="text" id="P2_NOMBRE" >
-        <input type="number" id="P2_EDAD" >
+        <input type="text" id="P4_ENAME" >
+        <input type="number" id="P4_SAL" >
         <textarea id="P2_DESCRIPCION" cols="30" rows="10"></textarea>
+        <button id="procesar">Procesar</button>
     </div>
     <script src="js/jquery.min.js"></script>
     <script src="js/handlebars.min.js"></script>
 
     <script type="text/javascript">
         var  apex = {
+            jQuery: $,
             server: {
                 process: function (data, config) {
                     return new Promise(function (resolve, reject) {
                         setTimeout(function () {
                             resolve('0');
                             //console.log(config);
-                        }, 6000)
+                        }, 0)
                     });
                 }
             },
@@ -34,23 +36,30 @@
         }
         function get_item(id, type = 'text') {
             var $j = $("#" + id);
+            $j.data('isChanged', '0');
+            $j.on('change', function (e) {
+                var $this = $(this);
+                $this.data('isChanged', '1');
+            });
             var  resp = {};
             resp = {
                 item_type: 'TEXT',
                 node: $j[0], element: $j, 
                 id: $j[0].id,
-                getValue: function() { return $j.val() }
-                
+                getValue: function() { return $j.val() },
+                isChanged: function () { return $j.data('isChanged') == 1; }
             }
             if (type == "number") {
                 resp['getNativeValue']= function() { return Number.parseInt( $j.val()) }
             }
+
+
             return resp;
         }
         (function ($) {
                  apex.items = {
-                    'P2_NOMBRE': get_item('P2_NOMBRE'),
-                    'P2_EDAD': get_item('P2_EDAD', 'number'),
+                    'P4_ENAME': get_item('P4_ENAME'),
+                    'P4_SAL': get_item('P4_SAL', 'number'),
                     'P2_DESCRIPCION': get_item('P2_DESCRIPCION')
                     }
                     console.log(apex.items);
@@ -62,7 +71,7 @@
     <script src="js/guardado-automatico-v2.js?v1.1.5"></script>
     <script >
 
-        guardado_automatico.init(null, null, null, {
+        guardado_automatico.init(null, null, '#procesar', {
             'P4_SAL': {
                 reglas: [
                     { metodo: 'rango', mensaje: 'P4_SAL debe estar entre 100 y 550', parametros: [100,550]  }
@@ -70,6 +79,7 @@
             }, 
             'P4_ENAME': {
                 reglas: [ 
+                        { metodo: function (item) { return item.getValue().length > 6 }, mensaje: 'El nombre debe contener minimo 6 letras' },
                         { metodo: { nombre: 'validar_nombre', data: { pageItems:  '#P4_EMPNO,#P4_ENAME' } }, mensaje: 'Nombre ya existe' }
                     ]
                 }

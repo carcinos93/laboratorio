@@ -13,7 +13,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -82,6 +82,10 @@ var validaciones = {
     });
 }*/
 var guardado_automatico = {
+    proceso: '',
+    botones: '',
+    id: '',
+    validaciones: {},
     /**
      * Inicializacion de proceso de guardado automatico
      * @param pId Nombre del item que es id
@@ -91,15 +95,20 @@ var guardado_automatico = {
      */
     init: function (pId, pProceso, pBotones, pValidaciones) {
         var $obj = this;
+        $obj.proceso = pProceso;
+        $obj.id = pId;
+        $obj.validaciones = pValidaciones;
+        if (pBotones) {
+            apex.jQuery(pBotones).on('click', $obj.boton_onclick.bind($obj));
+        }
         (function (jQuery) {
             /**
              *  Se toman los campo que no esten excluidos y que comiencen con P
              */
             var items = Object.entries(apex.items)
-                .filter(function (v) { return !EXCLUIR_CAMPOS.find(function (v1) { return v[1].item_type == v1; }) && v[1].id.startsWith('P'); })
-                .map(function (v) { return v[1]; });
+                .filter(function (v) { return !EXCLUIR_CAMPOS.find(function (v1) { return v[1].item_type == v1; }) && v[1].id.startsWith('P'); }).map(function (v) { return v[1]; });
             var opts_default = { procesar: true, reglas: [] }; // variable por defecto
-            items.forEach(function (item, index) {
+            items.forEach(function (item) {
                 var _a;
                 var data = { 'item': item }; // 
                 var opts = $.extend(true, (_a = pValidaciones[item.id]) !== null && _a !== void 0 ? _a : {}, opts_default);
@@ -121,47 +130,12 @@ var guardado_automatico = {
             });
         })(apex.jQuery);
     },
-    validar_campos: function (reglas, item) {
-        return __awaiter(this, void 0, void 0, function () {
-            var $this, _a, _b, _i, v, valido;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        $this = this;
-                        _a = [];
-                        for (_b in reglas)
-                            _a.push(_b);
-                        _i = 0;
-                        _c.label = 1;
-                    case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 4];
-                        v = _a[_i];
-                        return [4 /*yield*/, $this.validar_campo(reglas[v], item)];
-                    case 2:
-                        valido = _c.sent();
-                        if (!valido) {
-                            apex.message.showErrors([
-                                {
-                                    'location': 'inline',
-                                    'message': reglas[v].mensaje,
-                                    'pageItem': item.id
-                                }
-                            ]);
-                            /*mensajes.push({
-                                'location': 'inline',
-                                'message': reglas[v].mensaje,
-                                'pageItem': item.id
-                             });*/
-                        }
-                        _c.label = 3;
-                    case 3:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
-    },
+    /**
+     * Funcion que valida el campo segun las reglas
+     * @param regla
+     * @param item Campo del formulario
+     * @returns boolean
+     */
     validar_campo: function (regla, item) {
         return __awaiter(this, void 0, void 0, function () {
             var valido, respuesta;
@@ -173,17 +147,65 @@ var guardado_automatico = {
                         return [4 /*yield*/, validaciones.ajax(regla.metodo)];
                     case 1:
                         respuesta = _a.sent();
+                        /** el metodo ajax debe retornar 1 como verdadero o 0 como falso */
                         valido = respuesta == "1";
                         return [3 /*break*/, 3];
                     case 2:
                         if (typeof regla.metodo == "string") {
+                            /** si es una cadena se buscara en las funciones de validacion  */
                             valido = validaciones[regla.metodo].apply(validaciones, __spreadArray([item], regla.parametros, false));
                         }
                         else if (typeof regla.metodo == "function") {
+                            /** si no existe la funcion en validacion se puede implentar una funcion en las reglas */
                             valido = regla.metodo(item);
                         }
                         _a.label = 3;
                     case 3: return [2 /*return*/, valido];
+                }
+            });
+        });
+    },
+    validar_campos: function (reglas, item) {
+        return __awaiter(this, void 0, void 0, function () {
+            var mensajes, $this, _a, _b, _c, _i, v, valido;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        mensajes = [];
+                        $this = this;
+                        _a = reglas;
+                        _b = [];
+                        for (_c in _a)
+                            _b.push(_c);
+                        _i = 0;
+                        _d.label = 1;
+                    case 1:
+                        if (!(_i < _b.length)) return [3 /*break*/, 4];
+                        _c = _b[_i];
+                        if (!(_c in _a)) return [3 /*break*/, 3];
+                        v = _c;
+                        return [4 /*yield*/, $this.validar_campo(reglas[v], item)];
+                    case 2:
+                        valido = _d.sent();
+                        if (!valido) {
+                            /*apex.message.showErrors([
+                                {
+                                'location': 'inline',
+                                'message': reglas[v].mensaje,
+                                'pageItem': item.id
+                                }
+                            ]);*/
+                            mensajes.push({
+                                'location': 'inline',
+                                'message': reglas[v].mensaje,
+                                'pageItem': item.id
+                            });
+                        }
+                        _d.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/, mensajes];
                 }
             });
         });
@@ -193,14 +215,58 @@ var guardado_automatico = {
     item_change: function (e, cls) {
         var item = e.data.item;
         var reglas = e.data.validaciones.reglas;
-        apex.message.clearErrors();
-        this.validar_campos(reglas, item).then(function (r) { });
+        this.validar_campos(reglas, item).then(function (mensajes) {
+            if (mensajes.length) {
+                apex.message.clearErrors();
+                apex.message.showErrors(mensajes);
+            }
+        });
         /* this.validar_campos(reglas, item).then(function (mensajes) {
              if (mensajes.length ) {
                  apex.message.clearErrors();
                  apex.message.showErrors(mensajes);
              }
          } );*/
+    },
+    boton_onclick: function (e) {
+        var $this = this;
+        var items = Object.entries(apex.items).filter(function (v) { return v[1].isChanged(); }).map(function (v) { return v[1]; });
+        (function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var mensajes_global, _a, _b, _c, _i, i, item, mensajes;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
+                        case 0:
+                            mensajes_global = [];
+                            _a = items;
+                            _b = [];
+                            for (_c in _a)
+                                _b.push(_c);
+                            _i = 0;
+                            _d.label = 1;
+                        case 1:
+                            if (!(_i < _b.length)) return [3 /*break*/, 4];
+                            _c = _b[_i];
+                            if (!(_c in _a)) return [3 /*break*/, 3];
+                            i = _c;
+                            item = items[i];
+                            console.log($this.validaciones[item.id].reglas, item);
+                            return [4 /*yield*/, $this.validar_campos($this.validaciones[item.id].reglas, item)];
+                        case 2:
+                            mensajes = _d.sent();
+                            mensajes_global.push.apply(mensajes_global, mensajes);
+                            _d.label = 3;
+                        case 3:
+                            _i++;
+                            return [3 /*break*/, 1];
+                        case 4: return [2 /*return*/, mensajes_global];
+                    }
+                });
+            });
+        })().then(function (v) {
+            apex.message.clearErrors();
+            apex.message.showErrors(v);
+        });
     }
 };
 /*
