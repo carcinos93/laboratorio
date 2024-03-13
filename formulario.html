@@ -85,6 +85,82 @@
                 }
             }
         );
+
+
+        var validaciones = {
+            'P17_FC': { 'validaciones': [ {'metodo': function (campo) { return validar_rangos(campo, 1, 250); } ,'mensaje': 'El campo debe estar entre 1 y 250' } ]}, 
+            'P17_FR': { 'validaciones': [ {'metodo': function (campo) { return validar_rangos(campo, 0, 100); },'mensaje': 'El campo debe estar entre 0 y 100' } ]}, 
+            'P17_PERCENTIL_PESO': { 'validaciones': [ {'metodo': function (campo) { return validar_rangos(campo, 3, 99); },'mensaje': 'El campo debe estar entre 3 y 99' } ]}, 
+            'P17_PERCENTIL_TALLA': { 'validaciones': [ {'metodo': function (campo) { return validar_rangos(campo, 3, 99); },'mensaje': 'El campo debe estar entre 3 y 99' } ]}, 
+            'P17_SA': { 'validaciones': [ {'metodo': function (campo) { return validar_rangos(campo, 0, 10); }, 'mensaje': 'El campo debe estar entre 0 y 10' } ]}
+        }
+        
+        
+        cargar_guardado_automatico('P17_CORRELATIVO', 'guardar_datos', validaciones);
+        
+        guardado_automatico.init('P17_CORRELATIVO', 'guardar_datos', 'btnGuardar', '#btnGuardar', {
+            'P17_FC': {
+                reglas: [ { metodo: 'rango', parametros: [1,250], mensaje: 'El campo debe estar entre 1 y 250'  } ]
+                    }, 
+            'P17_FR': {
+                reglas: [ { metodo: 'rango', parametros: [0, 100], mensaje: 'El campo debe estar entre 0 y 100' }]
+                    },
+            'P17_PERCENTIL_PESO': { 
+                reglas: [ { metodo: 'rango', parametros: [3, 99], mensaje: 'El campo debe estar entre 3 y 99' } ]
+                    },
+            'P17_PERCENTIL_TALLA': { 
+                reglas: [ { metodo: 'rango', parametros: [3, 99], mensaje: 'El campo debe estar entre 3 y 99' } ]
+                    },
+            'P17_SA': {
+                reglas: [ { metodo: 'rango', parametros: [0, 10], mensaje: 'El campo debe estar entre 0 y 10' } ]
+                    },
+            'P17_BALLARD': {
+                reglas: [ { metodo: function (campo, semanas) {  var rx =/^\d+/; var arr = campo.getValue().match(rx) || ["0"];
+                    return apex.locale.toNumber(arr[0]) <= semanas;
+                }, parametros: [44], mensaje: 'Semanas no puede ser mayor a 44' } ]
+                },
+            
+            }
+        );
+
+        guardado_automatico.init('P4_INGRESOS_ID', 'guardar_datos', 'btnGuardar', '#btnEditar',{
+            'P4_FECHA_NAC_M': {
+                reglas: [ {
+                    metodo: { nombre: 'validar_edad', 
+                    data: { x01: 'P4_FECHA_NAC_M', x02: function () { return apex.item('P4_FECHA_NAC_M').getValue(); }, x03: 7,  x04: 70 ,
+                        pageItems: '#P4_INGRESOS_ID' } }, mensaje: 'La edad debe estar entre 7 y 70'
+                } ] },
+            'P4_FECHA_NAC_P': {
+                reglas: [ {
+                    metodo: { nombre: 'validar_edad', 
+                    data: { x01: 'P4_FECHA_NAC_P', x02: function () { return apex.item('P4_FECHA_NAC_P').getValue(); }, x03: 7,  x04: 70 ,
+                        pageItems: '#P4_INGRESOS_ID' } }, mensaje: 'La edad debe estar entre 7 y 95'
+                } ]
+            }
+        });
+
+        function aplicar_formato_fechas(campos = []) {
+            campos.forEach(function (v) {
+                apex.item(v).element.on('keyup', function (e) {
+                    var $this = apex.jQuery(this);
+                    var k = e.which;
+                    if (k == 13) {
+                        e.preventDefault();
+                        var arr = $this.val().toString().match(/(\d{2})(\d{2})(\d{4})/) || [];
+                        if (arr.length) {
+                            var fecha = new Date(parseInt(arr[3]), parseInt(arr[2]) - 1, parseInt(arr[1])  );
+                            var formato = apex.item(v).format.trim();
+                            $s(v, apex.date.format( fecha, formato));
+                        }
+                        
+                    }
+                });
+            });
+      
+        }
+
+
+
     </script>
 </body>
 </html>

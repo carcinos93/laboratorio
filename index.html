@@ -10,6 +10,7 @@
     <link href="css/primeng.css"  rel="stylesheet">
     <link href="css/primeng-theme.css"  rel="stylesheet">
     <link href="css/primeflex.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/smoothness/jquery-ui.css">
     <title>Document</title>
 
 </head>
@@ -25,6 +26,7 @@
             </tr>
         </thead>
         <tbody>
+
             <tr data-id="1">
                 <td class="opciones"></td>
             </tr>
@@ -37,9 +39,45 @@
         var exports = {};
     </script>
     <script src="js/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" integrity="sha256-eTyxS0rkjpLEo16uXTS0uVCS4815lc40K2iVpWDvdSY=" crossorigin="anonymous"></script>
     <script src="js/handlebars.min.js"></script>
     <script src="js/plugin.js?v1.3"></script>
     <script >
+        var apex;
+        apex.jQuery = $;
+        function confirmarDialogo(titulo, contenedor, mensaje,confirm_label, cancel_label, confirm_handler = function (){}, cancel_handler = function () {}) {
+            var botones = {};
+            botones[confirm_label] = function () {
+                if (typeof confirm_handler == "function") {
+                      confirm_handler(apex.jQuery(this));
+                } 
+                //dialog("close");
+            }
+            botones[cancel_label] = function() {
+                cancel_handler();
+                apex.jQuery(this).dialog("close");
+              };
+            apex.jQuery(contenedor + '_heading').html(mensaje)
+            apex.jQuery(contenedor)
+            .dialog({
+              modal: true,
+              open: function() {
+                $(this).parent().find(".ui-dialog-title").append("<span class='title'>" + titulo + "</span>");
+              },
+              title: '',
+              zIndex: 10000,
+              autoOpen: true,
+              width: '500px',
+              resizable: false,
+              buttons: botones,
+              close: function(event, ui) {
+                ///apex.jQuery(this).remove();
+              }
+            });
+        }
+        confirmarDialogo("Confirmar borrado", "Seguro que desea borrar","Si", "No", function () {
+            alert('confirmar borrado');
+        });
         function perfil(nombre,  edad,  cargo) {
             alert(nombre + ' ' + edad + ' ' + cargo)
         }
