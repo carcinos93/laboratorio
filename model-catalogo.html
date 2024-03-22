@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <script src="js/jquery.min.js"></script>
+    <script>
+        (function (jQuery) {
+            jQuery.fn.modalBusqueda = function (_opts) {
+                var opts =  jQuery.extend({ multiple: false, delimitador: ';' }, _opts);
+            }
+            
+            apex.jQuery("#P8_ANOMALIAS_CONGENITAS_CONTAINER").on('click', function () {
+                var $this = apex.jQuery(this);
+                var eventoAsignado = $this.data('eventoAsignado');
+                if (!eventoAsignado) {
+                    var dialog = apex.jQuery(".ui-dialog-popuplov")
+                    var campo_texto = dialog.find('input');
+                    if (campo_texto.length) { 
+                        campo_texto.on('focus', function (e) { 
+                            var  $this = apex.jQuery(this);
+                            if ($this.val().trim().length) {
+                                $this.val("");
+                            }
+                         });
+                    }
+
+                    $this.data('eventoAsignado','1');
+                } 
+            });
+   
+
+            function forzar_limpiar_poplov(campos = []) {
+                campos.forEach(function (v) {
+                    var contenedor = apex.jQuery("#" + v + "_CONTAINER");
+                    if (contenedor.length) {
+                        contenedor.on('click', function () {
+                            var $this = apex.jQuery(this);
+                            setTimeout(function () { 
+                                var dialog = apex.jQuery(".ui-dialog-popuplov")
+                                var campo_texto = dialog.find('input');
+                                var boton = dialog.find('.icon-search');
+                                if (campo_texto.length) { 
+                                    campo_texto.val("");
+                                    campo_texto.focus();
+                                    boton.click();
+                                }
+            
+                            }, 800);
+                  
+                        });
+                    }
+                })
+            }
+      
+            apex.items.P4_HIREDATE.element.on('keypress', function (e) { 
+                var  key = e.which; 
+                if (key == 13) { 
+                    e.preventDefault();    
+                }
+            });
+            
+        })($);
+    </script>
+</body>
+</html>

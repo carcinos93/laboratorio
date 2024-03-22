@@ -1,5 +1,5 @@
 interface ValidacionesOpts {
-    metodo: string | IMetodo | ((item: any, ...parametros: any[]) => boolean) ;
+    metodo: string | IMetodo | ((item: any) => boolean) ;
     es_asincrono: boolean;
     parametros?: any[];
     keyup?: boolean;
@@ -13,7 +13,6 @@ interface ICampoValidaciones {
 interface IMetodo {
     nombre: string;
     data?: any;
-    opciones?: any;
 }
 interface IValidaciones  {
     reglas: ValidacionesOpts[];
@@ -25,64 +24,25 @@ interface IGuardado_automatico {
 }
 
 var EXCLUIR_CAMPOS = ['HIDDEN', 'DISPLAY_ONLY'];
-/**
- * El primer argumento que recibe las funciones es el objeto y luego los parametros definidos 
- * la cantidad de argumentos que se inyectaran a la funcion dependera 
- * de los
- */
+
 const validaciones = {
-
-    cantidad_caracteres: function (campo: apex.item.ItemObject, n1: number){
-        return campo.getValue().toString().length == n1;
-    },
-
-    /**
-     * Funcion que valida si el valor esta entre el rango
-     * @param campo 
-     * @param n1 
-     * @param n2 
-     * @returns 
-     */
     rango: (campo: apex.item.ItemObject, n1: number, n2: number) => {
-        var n0 = typeof campo['getNativeValue'] == "function" ? campo['getNativeValue']() :  apex.locale.toNumber(campo.getValue().toString());  //apex.locale.toNumber(campo.getValue());
+        var n0 = typeof campo['getNativeValue'] == "function" ? campo['getNativeValue']() :  campo.getValue();  //apex.locale.toNumber(campo.getValue());
         return n0 >= n1 && n0 <= n2;
     },
-    /**
-     * Funcion que valida si el valor del campo es menor 
-     * @param campo 
-     * @param n1 
-     * @returns 
-     */
     menor: (campo: apex.item.ItemObject, n1) => {
-        var n0 = typeof campo['getNativeValue'] == "function" ? campo['getNativeValue']() :  apex.locale.toNumber(campo.getValue().toString()); //apex.locale.toNumber(campo.getValue());
+        var n0 = typeof campo['getNativeValue'] == "function" ? campo['getNativeValue']() :  campo.getValue(); //apex.locale.toNumber(campo.getValue());
         return n0 <= n1;
     },
-    /**
-     * Funcion que indica si el valor del campo es menor
-     * @param campo 
-     * @param n1 
-     * @returns 
-     */
     mayor: (campo: apex.item.ItemObject, n1) => {
-        var n0 = typeof campo['getNativeValue'] == "function" ? campo['getNativeValue']() :  apex.locale.toNumber(campo.getValue().toString()); //apex.locale.toNumber(campo.getValue());
+        var n0 = typeof campo['getNativeValue'] == "function" ? campo['getNativeValue']() :  campo.getValue(); //apex.locale.toNumber(campo.getValue());
         return n0 >= n1;
     },
-    /**
-     * Funcion que indica si el campo cumple con la expresion regular
-     * @param campo
-     * @param reg 
-     * @returns 
-     */
     regex: (campo: apex.item.ItemObject, reg: RegExp) => {
         return campo.getValue().toString().match(reg);
     },
-    /**
-     * Funcion que usa una llamada por ajax a un evento definido del servidor (ajax callbacks)
-     * @param config 
-     * @returns 
-     */
     ajax: async (config: IMetodo) =>   {
-        var respuesta = await apex.server.process( config.nombre, config.data, config.opciones );
+        var respuesta = await apex.server.process( config.nombre, config.data  );
         return respuesta;
     }
 }
@@ -124,20 +84,16 @@ const guardado_automatico = {
             /**
              *  Se toman los campo que no esten excluidos y que comiencen con P
              */
-            var items = Object.entries(apex.items) // arreglo de  [ 'P4_CAMPO' (id campo), apex.item (objeto apex) ]
-                .filter((v) => !EXCLUIR_CAMPOS.find((v1) => v[1].item_type == v1) && v[1].id.startsWith('P') && !v[1].element.hasClass('excluir') && !v[1].id.endsWith('_input') ).map((v) => v[1]);
+            var items = Object.entries(apex.items)
+                .filter((v) => !EXCLUIR_CAMPOS.find((v1) => v[1].item_type == v1) && v[1].id.startsWith('P')).map((v) => v[1]);
             
-           
+            var opts_default = { procesar: true, reglas: [] }; // variable por defecto
             items.forEach((item) => {
-                var opts_default = { procesar: true, reglas: [] }; // variable por defecto
                 var data = { 'item': item }; // 
-                var p_validaciones = pValidaciones[item.id];
-                var opts = apex.jQuery['fn'].extend(opts_default, p_validaciones );  //$.extend(true,, opts_default);
-                data['validaciones'] = opts;
-                if ("RADIO_GROUP SELECT".includes(item.item_type)) {
-                    item.element.data('old_value', item.getValue().toString());
+                var opts = $.extend(true, pValidaciones[item.id] ?? {}, opts_default);
+                if (opts) {
+                    data['validaciones'] = opts;
                 }
-
                 if (opts.procesar) {
                     if ("TEXTAREA".includes(item.node.tagName.toUpperCase())) {
                         /**
@@ -152,16 +108,6 @@ const guardado_automatico = {
             });
             // Se inicializa el temporizador
             $this.inicializar_temporizador();
-
-            var ultima_ubicacion = jQuery("input[name*='ULTIMA_UBICACION']");
-    
-            if (ultima_ubicacion.val() && ultima_ubicacion.val() != "") {
-                var ultimo_campo = jQuery("#" + ultima_ubicacion.val());
-                var posicionCentrada = ultimo_campo.offset().top - (jQuery(window).height() / 2) + (ultimo_campo.height() / 2);
-                jQuery([document.documentElement, document.body]).animate({
-                    scrollTop: posicionCentrada
-                }, 1000);
-            }
             
             
         })(apex.jQuery);
@@ -173,7 +119,7 @@ const guardado_automatico = {
         var $this = this;
         if ($this.id_campo != null && $this.proceso_formulario != null) {
             setInterval(function () {
-                if ( ++$this.contador >= 3 ) {
+                if ( ++$this.contador >= 2 ) {
                     $this.contador = 0;
                     try {
                         $this.guardar_formulario();
@@ -195,31 +141,6 @@ const guardado_automatico = {
         var id = 'x' + n.substring(n.length - 2) ;
         return id;
     },
-    validar_async:async function (nombre: string, mostrarErrores = true, guardar = true) { 
-        var item = apex.item(nombre)
-        var mensajes = await this.validar_campos(this.validaciones[nombre].reglas, item );
-        var valido = mensajes.length == 0;
-        apex.message.clearErrors();
-        if (mostrarErrores && !valido) {
-            apex.message.showErrors(mensajes);
-        }
-        if (guardar && valido) {
-            jQuery("input[name*='ULTIMA_UBICACION']").val( item.id ); 
-            /**Si el campo no esta agregado a la cola y es valido se agrega para ser procesado */
-            if (!this.g_campos.find((v) => v ==  item.id )) {
-                this.g_campos.push( item.id );
-            }
-        }
-        return valido;
-    },
-    guardar_datos_submit: function () {
-        apex.submit({request: this.proceso_formulario ,validate:false});
-    },
-    guardar_campo: function (nombre) {
-        if (!this.g_campos.find((v) => v ==  nombre )) {
-            this.g_campos.push( nombre );
-        }
-    },
     /**
      * Funcion que valida el campo segun las reglas
      * @param regla 
@@ -228,21 +149,21 @@ const guardado_automatico = {
      */
     validar_campo: async function (regla: ValidacionesOpts,  item: apex.item.ItemObject) {
         var valido = true;
-        var parametros = regla.parametros ?? [];
+        
         if (typeof regla.metodo  == "object") {
             /** si es un objeto se tomara como validacion ajax */
            var respuesta = await validaciones.ajax(regla.metodo);
            /** el metodo ajax debe retornar 1 como verdadero o 0 como falso */
-           valido = respuesta.toString().trim() === "1";
+           valido = respuesta == "1";
         } else if (typeof regla.metodo ==  "string") {
             /** si es una cadena se buscara en las funciones de validacion  */
-            valido = validaciones[regla.metodo](item, ...parametros);
+            valido = validaciones[regla.metodo](item, ...regla.parametros);
         } else if (typeof regla.metodo == "function") {
             /** si no existe la funcion en validacion se puede implentar una funcion en las reglas */
             if ( regla.es_asincrono ) {
-                valido = await regla.metodo(item, ...parametros);
+                valido = await regla.metodo(item);
             } else {
-                valido = regla.metodo(item, ...parametros);
+                valido = regla.metodo(item);
             }
 
         }
@@ -273,33 +194,18 @@ const guardado_automatico = {
     },
     
     item_keyup: function (e: any) {
-        var item = e.data.item as apex.item.ItemObject;
-        var $this = this;
-        jQuery("input[name*='ULTIMA_UBICACION']").val( item.id ); 
-        /**Si el campo no esta agregado a la cola y es valido se agrega para ser procesado */
-        if (!$this.g_campos.find((v) => v ==  item.id )) {
-            $this.g_campos.push( item.id );
-        }
+        
     },
     item_change: function (e: any, cls) {
-        var $this = this;
+
         var item = e.data.item as apex.item.ItemObject;
         var reglas = (e.data.validaciones as IValidaciones ).reglas;
         
         this.validar_campos(reglas, item).then(function (mensajes) {
-            apex.message.clearErrors();
             if (mensajes.length ) {
+                apex.message.clearErrors();
                 apex.message.showErrors(mensajes);
-            } else {
-                if (typeof item.element.data('old_value') == "string" ) {
-                    item.element.data('old_value', item.getValue().toString());
-                }
-                jQuery("input[name*='ULTIMA_UBICACION']").val( item.id ); 
-                /**Si el campo no esta agregado a la cola y es valido se agrega para ser procesado */
-                if (!$this.g_campos.find((v) => v ==  item.id )) {
-                    $this.g_campos.push( item.id );
-                }
-            }    
+            } 
         });
        /* this.validar_campos(reglas, item).then(function (mensajes) {
             if (mensajes.length ) {
@@ -313,7 +219,6 @@ const guardado_automatico = {
         if ($this.g_campos.length==0) {
             return;
         }
-
         /** se toman los primeros 3 campos */
         var campos_enviar = [...$this.g_campos ].filter(function (v, i) { return i < 3 });
         var data = { pageItems: "#" + $this.id_campo };
@@ -331,9 +236,9 @@ const guardado_automatico = {
              */
             data[ $this.generador_id(++indice) ] = v; // x01: P1_CAMPO;
             if (Array.isArray(item.getValue())) {
-                data[ $this.generador_id(++indice) ] = item.getValue().join( item.separator ?? ";" ).toUpperCase().trim();
+                data[ generador_id(++indice) ] = item.getValue().join( item.separator ?? ";" );
             } else {
-                data[ $this.generador_id(++indice) ] = item.getValue().toString().toUpperCase().trim() // x02: Valor de P1_CAMPO;
+                data[ generador_id(++indice) ] = item.getValue() // x02: Valor de P1_CAMPO;
             }
         });
         ///var v_refreshObject = campos_enviar.map((v) => "#" + v ).join(",");
@@ -368,10 +273,8 @@ const guardado_automatico = {
             for (var i in items) {
                 var item = items[i];
                 // se valida el  campo
-                if ($this.validaciones[item.id]) {
-                    var mensajes = await $this.validar_campos( $this.validaciones[item.id].reglas, item);
-                    mensajes_global.push(...mensajes);
-                }
+                var mensajes = await $this.validar_campos( $this.validaciones[item.id].reglas, item);
+                mensajes_global.push(...mensajes);
             }
            return mensajes_global;
  
@@ -388,3 +291,17 @@ const guardado_automatico = {
         });
     }
 }
+/*
+var v: ICampoValidaciones = {
+    'P2_EDAD': {
+        reglas: [
+            { metodo:  'rango', mensaje: 'La edad debe estar entre 18 y 56', parametros: [18, 46]  }
+        ]
+    }, 
+    'P2_NOMBRE': {
+        reglas: [ 
+            { metodo: { nombre: 'proceso', data: { x01: 'nombre' } }, mensaje: 'Nombre no usuario no valido' }
+        ]
+    }
+}
+*/
