@@ -149,7 +149,7 @@ var guardado_automatico = {
              *  Se toman los campo que no esten excluidos y que comiencen con P
              */
             var items = Object.entries(apex.items) // arreglo de  [ 'P4_CAMPO' (id campo), apex.item (objeto apex) ]
-                .filter(function (v) { return !EXCLUIR_CAMPOS.find(function (v1) { return v[1].item_type == v1; }) && v[1].id.startsWith('P') && !v[1].id.endsWith('_input'); }).map(function (v) { return v[1]; });
+                .filter(function (v) { return !EXCLUIR_CAMPOS.find(function (v1) { return v[1].item_type == v1; }) && v[1].id.startsWith('P') && !v[1].element.hasClass('excluir') && !v[1].id.endsWith('_input'); }).map(function (v) { return v[1]; });
             items.forEach(function (item) {
                 var opts_default = { procesar: true, reglas: [] }; // variable por defecto
                 var data = { 'item': item }; // 
@@ -191,7 +191,7 @@ var guardado_automatico = {
         var $this = this;
         if ($this.id_campo != null && $this.proceso_formulario != null) {
             setInterval(function () {
-                if (++$this.contador >= 3) {
+                if (++$this.contador >= 2) {
                     $this.contador = 0;
                     try {
                         $this.guardar_formulario();
@@ -406,6 +406,11 @@ var guardado_automatico = {
                     /**se filtra la cola de campos dejando solo lo que no han sido enviados */
                     $this.g_campos = $this.g_campos.filter(function (v, i) {
                         return !campos_enviar.find(function (v1) { return v1 == v; });
+                    });
+                    campos_enviar.forEach(function (c) {
+                        if ($this.validaciones[c] != undefined && $this.validaciones[c].accion != undefined) {
+                            apex.event.trigger(document, $this.validaciones[c].accion);
+                        }
                     });
                 }
                 if (spinner) {

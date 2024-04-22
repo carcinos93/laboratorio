@@ -111,7 +111,7 @@ const guardado_automatico = {
      * @param pBotones Identificador del boton de guardado 
      * @param pValidaciones Lista de validaciones
      */
-    init: function (pId: string, ajax_proceso: string, proceso_formulario: string , pBotones: string, pValidaciones: ICampoValidaciones) {
+    init: function (pId: string, ajax_proceso: string, proceso_formulario: string , pBotones: string, pValidaciones: ICampoValidaciones, formulario_contenedor: string = null) {
         var $this = this;
         $this.ajax_proceso = ajax_proceso;
         $this.proceso_formulario = proceso_formulario;
@@ -125,7 +125,12 @@ const guardado_automatico = {
              *  Se toman los campo que no esten excluidos y que comiencen con P
              */
             var items = Object.entries(apex.items) // arreglo de  [ 'P4_CAMPO' (id campo), apex.item (objeto apex) ]
-                .filter((v) => !EXCLUIR_CAMPOS.find((v1) => v[1].item_type == v1) && v[1].id.startsWith('P') && !v[1].element.hasClass('excluir') && !v[1].id.endsWith('_input') ).map((v) => v[1]);
+                .filter((v) => !EXCLUIR_CAMPOS.find((v1) => v[1].item_type == v1) && 
+                v[1].id.startsWith('P') && 
+                !v[1].element.hasClass('excluir') && 
+                !v[1].id.endsWith('_input') &&
+                (formulario_contenedor == null || v[1].element.parent("form#" + formulario_contenedor).length > 0)
+            ).map((v) => v[1]);
             
            
             items.forEach((item) => {
@@ -173,7 +178,7 @@ const guardado_automatico = {
         var $this = this;
         if ($this.id_campo != null && $this.proceso_formulario != null) {
             setInterval(function () {
-                if ( ++$this.contador >= 3 ) {
+                if ( ++$this.contador >= 2 ) {
                     $this.contador = 0;
                     try {
                         $this.guardar_formulario();
@@ -345,6 +350,12 @@ const guardado_automatico = {
                         $this.g_campos = $this.g_campos.filter(function (v, i) {
                             return !campos_enviar.find((v1) => v1 == v);
                         });
+                        campos_enviar.forEach(function (c) {
+                            if ($this.validaciones[c] != undefined && $this.validaciones[c].accion != undefined) {
+                                apex.event.trigger(document, $this.validaciones[c].accion);
+                            }
+                        });
+
                     }
                     if (spinner) {
                         spinner.remove();
