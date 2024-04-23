@@ -1,3 +1,5 @@
+///<
+
 interface ValidacionesOpts {
     metodo: string | IMetodo | ((item: any, ...parametros: any[]) => boolean) ;
     es_asincrono: boolean;
@@ -95,14 +97,14 @@ const validaciones = {
         dataType: 'text'
     });
 }*/
-const guardado_automatico = {
-    contador : 0,
-    g_campos : [],
-    ajax_proceso: '',
-    proceso_formulario: '',
-    botones: '',
-    id_campo: '',
-    validaciones: {},
+class GuardadoAutomatico {
+    contador: number;
+    g_campos: [];
+    ajax_proceso: string;
+    proceso_formulario: string;
+    botones: string;
+    id_campo: string;
+    validaciones: object;
     /**
      * Inicializacion de proceso de guardado automatico
      * @param pId Nombre del item que es id 
@@ -111,7 +113,7 @@ const guardado_automatico = {
      * @param pBotones Identificador del boton de guardado 
      * @param pValidaciones Lista de validaciones
      */
-    init: function (pId: string, ajax_proceso: string, proceso_formulario: string , pBotones: string, pValidaciones: ICampoValidaciones, formulario_contenedor: string = null) {
+    init (pId: string, ajax_proceso: string, proceso_formulario: string , pBotones: string, pValidaciones: ICampoValidaciones, formulario_contenedor: string = null) {
         var $this = this;
         $this.ajax_proceso = ajax_proceso;
         $this.proceso_formulario = proceso_formulario;
@@ -170,7 +172,7 @@ const guardado_automatico = {
             
             
         })(apex.jQuery);
-    },
+    }
     /**
      * Funcion que se encarga de ejecutar la  funcion de guardado formulario cada intervalo de tiempo
      */
@@ -189,18 +191,18 @@ const guardado_automatico = {
                 }
             }, 1000 );
         }
-    },
+    }
     /**
      * Funcion que retorna cadena de texto en el formato x01, x02 ... x10 
      * @param i Indice
      * @returns string
      */
-    generador_id: function (i) {
+    generador_id(i: number) {
         var n = '0' + i.toString()
         var id = 'x' + n.substring(n.length - 2) ;
         return id;
-    },
-    validar_async:async function (nombre: string, mostrarErrores = true, guardar = true) { 
+    }
+    async validar_async (nombre: string, mostrarErrores = true, guardar = true) { 
         var item = apex.item(nombre)
         var mensajes = await this.validar_campos(this.validaciones[nombre].reglas, item );
         var valido = mensajes.length == 0;
@@ -216,22 +218,22 @@ const guardado_automatico = {
             }
         }
         return valido;
-    },
-    guardar_datos_submit: function () {
+    }
+    guardar_datos_submit() {
         apex.submit({request: this.proceso_formulario ,validate:false});
-    },
-    guardar_campo: function (nombre) {
+    }
+    guardar_campo(nombre: string) {
         if (!this.g_campos.find((v) => v ==  nombre )) {
             this.g_campos.push( nombre );
         }
-    },
+    }
     /**
      * Funcion que valida el campo segun las reglas
      * @param regla 
      * @param item Campo del formulario
      * @returns boolean
      */
-    validar_campo: async function (regla: ValidacionesOpts,  item: apex.item.ItemObject) {
+    async validar_campo (regla: ValidacionesOpts,  item: apex.item.ItemObject) {
         var valido = true;
         var parametros = regla.parametros ?? [];
         if (typeof regla.metodo  == "object") {
@@ -253,8 +255,8 @@ const guardado_automatico = {
         }
 
         return valido;
-    },
-    validar_campos: async function (reglas: ValidacionesOpts[], item: apex.item.ItemObject) {
+    }
+    async validar_campos(reglas: ValidacionesOpts[], item: apex.item.ItemObject) {
         var mensajes = [];
         var $this = this;
         for (var v in reglas) { 
@@ -275,9 +277,9 @@ const guardado_automatico = {
             }
         }
         return mensajes;
-    },
+    }
     
-    item_keyup: function (e: any) {
+    item_keyup(e: any) {
         var item = e.data.item as apex.item.ItemObject;
         var $this = this;
         jQuery("input[name*='ULTIMA_UBICACION']").val( item.id ); 
@@ -285,8 +287,8 @@ const guardado_automatico = {
         if (!$this.g_campos.find((v) => v ==  item.id )) {
             $this.g_campos.push( item.id );
         }
-    },
-    item_change: function (e: any, cls) {
+    }
+     item_change(e: any, cls) {
         var $this = this;
         var item = e.data.item as apex.item.ItemObject;
         var reglas = (e.data.validaciones as IValidaciones ).reglas;
@@ -312,8 +314,8 @@ const guardado_automatico = {
                 apex.message.showErrors(mensajes);
             }   
         } );*/
-    },
-    guardar_formulario: function () {
+    }
+    guardar_formulario() {
         var $this = this;
         if ($this.g_campos.length==0) {
             return;
@@ -368,8 +370,8 @@ const guardado_automatico = {
                 }
             }   
         );
-    },
-    boton_onclick: function (e) {
+    }
+    boton_onclick(e) {
         var $this = this;
         // se filtran los items que han sido cambiados y que no esten vacios
         var items = Object.entries(apex.items).filter((v) => v[1].isChanged() && !v[1].isEmpty()).map((v) => v[1]);

@@ -1,3 +1,4 @@
+///<
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -119,14 +120,9 @@ var validaciones = {
         dataType: 'text'
     });
 }*/
-var guardado_automatico = {
-    contador: 0,
-    g_campos: [],
-    ajax_proceso: '',
-    proceso_formulario: '',
-    botones: '',
-    id_campo: '',
-    validaciones: {},
+var GuardadoAutomatico = /** @class */ (function () {
+    function GuardadoAutomatico() {
+    }
     /**
      * Inicializacion de proceso de guardado automatico
      * @param pId Nombre del item que es id
@@ -135,7 +131,7 @@ var guardado_automatico = {
      * @param pBotones Identificador del boton de guardado
      * @param pValidaciones Lista de validaciones
      */
-    init: function (pId, ajax_proceso, proceso_formulario, pBotones, pValidaciones, formulario_contenedor) {
+    GuardadoAutomatico.prototype.init = function (pId, ajax_proceso, proceso_formulario, pBotones, pValidaciones, formulario_contenedor) {
         if (formulario_contenedor === void 0) { formulario_contenedor = null; }
         var $this = this;
         $this.ajax_proceso = ajax_proceso;
@@ -154,7 +150,7 @@ var guardado_automatico = {
                 v[1].id.startsWith('P') &&
                 !v[1].element.hasClass('excluir') &&
                 !v[1].id.endsWith('_input') &&
-                (formulario_contenedor == null || v[1].element.parent("#" + formulario_contenedor).length > 0); }).map(function (v) { return v[1]; });
+                (formulario_contenedor == null || v[1].element.parents("#" + formulario_contenedor).length > 0); }).map(function (v) { return v[1]; });
             items.forEach(function (item) {
                 var opts_default = { procesar: true, reglas: [] }; // variable por defecto
                 var data = { 'item': item }; // 
@@ -188,11 +184,11 @@ var guardado_automatico = {
                 }, 1000);
             }
         })(apex.jQuery);
-    },
+    };
     /**
      * Funcion que se encarga de ejecutar la  funcion de guardado formulario cada intervalo de tiempo
      */
-    inicializar_temporizador: function () {
+    GuardadoAutomatico.prototype.inicializar_temporizador = function () {
         var $this = this;
         if ($this.id_campo != null && $this.proceso_formulario != null) {
             setInterval(function () {
@@ -207,18 +203,18 @@ var guardado_automatico = {
                 }
             }, 1000);
         }
-    },
+    };
     /**
      * Funcion que retorna cadena de texto en el formato x01, x02 ... x10
      * @param i Indice
      * @returns string
      */
-    generador_id: function (i) {
+    GuardadoAutomatico.prototype.generador_id = function (i) {
         var n = '0' + i.toString();
         var id = 'x' + n.substring(n.length - 2);
         return id;
-    },
-    validar_async: function (nombre, mostrarErrores, guardar) {
+    };
+    GuardadoAutomatico.prototype.validar_async = function (nombre, mostrarErrores, guardar) {
         if (mostrarErrores === void 0) { mostrarErrores = true; }
         if (guardar === void 0) { guardar = true; }
         return __awaiter(this, void 0, void 0, function () {
@@ -246,22 +242,22 @@ var guardado_automatico = {
                 }
             });
         });
-    },
-    guardar_datos_submit: function () {
+    };
+    GuardadoAutomatico.prototype.guardar_datos_submit = function () {
         apex.submit({ request: this.proceso_formulario, validate: false });
-    },
-    guardar_campo: function (nombre) {
+    };
+    GuardadoAutomatico.prototype.guardar_campo = function (nombre) {
         if (!this.g_campos.find(function (v) { return v == nombre; })) {
             this.g_campos.push(nombre);
         }
-    },
+    };
     /**
      * Funcion que valida el campo segun las reglas
      * @param regla
      * @param item Campo del formulario
      * @returns boolean
      */
-    validar_campo: function (regla, item) {
+    GuardadoAutomatico.prototype.validar_campo = function (regla, item) {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
             var valido, parametros, respuesta;
@@ -296,8 +292,8 @@ var guardado_automatico = {
                 }
             });
         });
-    },
-    validar_campos: function (reglas, item) {
+    };
+    GuardadoAutomatico.prototype.validar_campos = function (reglas, item) {
         return __awaiter(this, void 0, void 0, function () {
             var mensajes, $this, _a, _b, _c, _i, v, valido;
             return __generator(this, function (_d) {
@@ -341,8 +337,8 @@ var guardado_automatico = {
                 }
             });
         });
-    },
-    item_keyup: function (e) {
+    };
+    GuardadoAutomatico.prototype.item_keyup = function (e) {
         var item = e.data.item;
         var $this = this;
         jQuery("input[name*='ULTIMA_UBICACION']").val(item.id);
@@ -350,8 +346,8 @@ var guardado_automatico = {
         if (!$this.g_campos.find(function (v) { return v == item.id; })) {
             $this.g_campos.push(item.id);
         }
-    },
-    item_change: function (e, cls) {
+    };
+    GuardadoAutomatico.prototype.item_change = function (e, cls) {
         var $this = this;
         var item = e.data.item;
         var reglas = e.data.validaciones.reglas;
@@ -377,8 +373,8 @@ var guardado_automatico = {
                  apex.message.showErrors(mensajes);
              }
          } );*/
-    },
-    guardar_formulario: function () {
+    };
+    GuardadoAutomatico.prototype.guardar_formulario = function () {
         var $this = this;
         if ($this.g_campos.length == 0) {
             return;
@@ -431,8 +427,8 @@ var guardado_automatico = {
                 }
             }
         });
-    },
-    boton_onclick: function (e) {
+    };
+    GuardadoAutomatico.prototype.boton_onclick = function (e) {
         var $this = this;
         // se filtran los items que han sido cambiados y que no esten vacios
         var items = Object.entries(apex.items).filter(function (v) { return v[1].isChanged() && !v[1].isEmpty(); }).map(function (v) { return v[1]; });
@@ -480,5 +476,6 @@ var guardado_automatico = {
                 apex.submit({ request: $this.proceso_formulario, validate: false });
             }
         });
-    }
-};
+    };
+    return GuardadoAutomatico;
+}());
