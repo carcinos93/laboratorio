@@ -14,7 +14,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+        while (_) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -122,6 +122,9 @@ var validaciones = {
 }*/
 var GuardadoAutomatico = /** @class */ (function () {
     function GuardadoAutomatico() {
+        this.g_campos = [];
+        this.contador = 0;
+        this.validaciones = {};
     }
     /**
      * Inicializacion de proceso de guardado automatico
@@ -138,6 +141,7 @@ var GuardadoAutomatico = /** @class */ (function () {
         $this.proceso_formulario = proceso_formulario;
         $this.id_campo = pId;
         $this.validaciones = pValidaciones;
+        $this.botones = pBotones;
         if (pBotones) {
             apex.jQuery(pBotones).on('click', $this.boton_onclick.bind($this));
         }
@@ -295,26 +299,23 @@ var GuardadoAutomatico = /** @class */ (function () {
     };
     GuardadoAutomatico.prototype.validar_campos = function (reglas, item) {
         return __awaiter(this, void 0, void 0, function () {
-            var mensajes, $this, _a, _b, _c, _i, v, valido;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var mensajes, $this, _a, _b, _i, v, valido;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         mensajes = [];
                         $this = this;
-                        _a = reglas;
-                        _b = [];
-                        for (_c in _a)
-                            _b.push(_c);
+                        _a = [];
+                        for (_b in reglas)
+                            _a.push(_b);
                         _i = 0;
-                        _d.label = 1;
+                        _c.label = 1;
                     case 1:
-                        if (!(_i < _b.length)) return [3 /*break*/, 4];
-                        _c = _b[_i];
-                        if (!(_c in _a)) return [3 /*break*/, 3];
-                        v = _c;
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        v = _a[_i];
                         return [4 /*yield*/, $this.validar_campo(reglas[v], item)];
                     case 2:
-                        valido = _d.sent();
+                        valido = _c.sent();
                         if (!valido) {
                             /*apex.message.showErrors([
                                 {
@@ -329,7 +330,7 @@ var GuardadoAutomatico = /** @class */ (function () {
                                 'pageItem': item.id
                             });
                         }
-                        _d.label = 3;
+                        _c.label = 3;
                     case 3:
                         _i++;
                         return [3 /*break*/, 1];
@@ -435,29 +436,26 @@ var GuardadoAutomatico = /** @class */ (function () {
         // se ejecuta la validacion para todos los campos de manera asincrona
         (function () {
             return __awaiter(this, void 0, void 0, function () {
-                var mensajes_global, _a, _b, _c, _i, i, item, mensajes;
-                return __generator(this, function (_d) {
-                    switch (_d.label) {
+                var mensajes_global, _a, _b, _i, i, item, mensajes;
+                return __generator(this, function (_c) {
+                    switch (_c.label) {
                         case 0:
                             mensajes_global = [];
-                            _a = items;
-                            _b = [];
-                            for (_c in _a)
-                                _b.push(_c);
+                            _a = [];
+                            for (_b in items)
+                                _a.push(_b);
                             _i = 0;
-                            _d.label = 1;
+                            _c.label = 1;
                         case 1:
-                            if (!(_i < _b.length)) return [3 /*break*/, 4];
-                            _c = _b[_i];
-                            if (!(_c in _a)) return [3 /*break*/, 3];
-                            i = _c;
+                            if (!(_i < _a.length)) return [3 /*break*/, 4];
+                            i = _a[_i];
                             item = items[i];
                             if (!$this.validaciones[item.id]) return [3 /*break*/, 3];
                             return [4 /*yield*/, $this.validar_campos($this.validaciones[item.id].reglas, item)];
                         case 2:
-                            mensajes = _d.sent();
+                            mensajes = _c.sent();
                             mensajes_global.push.apply(mensajes_global, mensajes);
-                            _d.label = 3;
+                            _c.label = 3;
                         case 3:
                             _i++;
                             return [3 /*break*/, 1];

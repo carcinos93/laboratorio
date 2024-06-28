@@ -99,12 +99,20 @@ const validaciones = {
 }*/
 class GuardadoAutomatico {
     contador: number;
-    g_campos: [];
+    g_campos: string[];
     ajax_proceso: string;
     proceso_formulario: string;
     botones: string;
     id_campo: string;
     validaciones: object;
+    items: apex.item.ItemObject[];
+
+    constructor() {
+        this.g_campos = [];
+        this.contador = 0;
+        this.validaciones = {};
+        this.items = [];
+    }    
     /**
      * Inicializacion de proceso de guardado automatico
      * @param pId Nombre del item que es id 
@@ -119,6 +127,8 @@ class GuardadoAutomatico {
         $this.proceso_formulario = proceso_formulario;
         $this.id_campo = pId;
         $this.validaciones = pValidaciones;
+        $this.botones = pBotones;
+        
         if (pBotones) {
             apex.jQuery(pBotones).on('click', $this.boton_onclick.bind($this));
         }
@@ -134,6 +144,7 @@ class GuardadoAutomatico {
                 (formulario_contenedor == null || v[1].element.parents("#" + formulario_contenedor).length > 0)
             ).map((v) => v[1]);
             
+            $this.items = items;
            
             items.forEach((item) => {
                 var opts_default = { procesar: true, reglas: [] }; // variable por defecto
@@ -371,10 +382,30 @@ class GuardadoAutomatico {
             }   
         );
     }
+    /***
+     * Funcion que valida todos los campos que no esten vacios y haya tenido cambios
+     * @returns []
+     */
+    async validar_todo() {
+        var items = this.items.filter((v) => v.isChanged() && !v.isEmpty()); 
+        // se ejecuta la validacion para todos los campos de manera asincrona
+        var mensajes_global = [];
+        for (var i in items) {
+                var item = items[i];
+                // se valida el  campo
+                if (this.validaciones[item.id]) {
+                    var mensajes = await this.validar_campos( this.validaciones[item.id].reglas, item);
+                    mensajes_global.push(...mensajes);
+                }
+            }
+           return mensajes_global;
+    }
+
     boton_onclick(e) {
         var $this = this;
+    
         // se filtran los items que han sido cambiados y que no esten vacios
-        var items = Object.entries(apex.items).filter((v) => v[1].isChanged() && !v[1].isEmpty()).map((v) => v[1]);
+        var items = this.items.filter((v) => v.isChanged() && !v.isEmpty()); //Object.entries(apex.items).filter((v) => v[1].isChanged() && !v[1].isEmpty()).map((v) => v[1]);
         // se ejecuta la validacion para todos los campos de manera asincrona
         (async function () {
             var mensajes_global = [];

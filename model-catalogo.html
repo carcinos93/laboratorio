@@ -1,16 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Document</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>
 </head>
 <body>
+    <select name="padre" id="padre" value="209">
+        <option value="209" selected>el salvador</option>
+    </select>
+    <select name="pokemones" id="pokemon" data-value="3">
+        <!-- prueba -->
+    </select>
     <script src="js/jquery.min.js"></script>
+    <script src="js/select-control.js?v2"></script>
     <script>
         (function (jQuery) {
-            jQuery.fn.modalBusqueda = function (_opts) {
+
+            jQuery("#pokemon").select_control({
+                padre: '#padre',
+                padre_variable: 'country_id',
+                etiqueta: 'name',
+                valor: 'value',
+                ajax_opts: {
+                    url: 'https://calidad.cenpromype.org/states'
+                }
+            });
+
+            /*jQuery.fn.modalBusqueda = function (_opts) {
                 var opts =  jQuery.extend({ multiple: false, delimitador: ';' }, _opts);
             }
             
@@ -62,7 +80,7 @@
                 if (key == 13) { 
                     e.preventDefault();    
                 }
-            });
+            });*/
             
         })($);
     </script>
