@@ -261,7 +261,8 @@ document.addEventListener("alpine:init", function () {
                 $($this.element()).on('change', function (e) {
                     var val = $this.ismulti ? $(e.target).val().join(";") : $(e.target).val();
                     $this.value = val;
-                    $this.$dispatch('change-select2', { value: val, field: $this.field });
+                    //$this.$dispatch('change-select2', { value: val, field: $this.field });
+                    $this.registro[$this.field] = val;
                 });
             } }));
     });

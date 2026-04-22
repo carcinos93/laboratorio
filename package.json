@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@types/alpinejs": "^3.13.11",
+    "quagga": "^0.12.1",
     "serve": "^14.2.3"
   },
   "scripts": {
