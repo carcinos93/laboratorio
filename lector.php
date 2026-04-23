@@ -3,10 +3,11 @@
 
 $resultados_json = json_encode($resultado[0]);
 
+
 $html= <<<HTML
-<div class="container mt-4" >
+<div class="container-fluid mt-4" x-data='$variables_cliente_json' >
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header bg-primary text-white" style="background-color:#123273">
             <h5 class="mb-0">Devolución de material</h5>
         </div>
         <div class="card-body">
@@ -15,14 +16,12 @@ $html= <<<HTML
                 if (this.codigoBuscado == '') {
                     return;
                 }
-                
                 document.getElementById('formulario-lector').submit();
-                
             }}">
                 <label for="barcode">Escanear / Ingresar Código:</label>
                 <input type="text" 
                        id="barcode" 
-                       name="codigoBuscado"
+					   name="codigoBuscado"
                        class="form-control form-control-lg" 
                        x-model="codigoBuscado"
                        @keyup.enter="buscar()"
@@ -33,42 +32,76 @@ $html= <<<HTML
         </div>
     </div>
     
-    <div class="card" x-data="{material: $resultados_json}">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">Lista de Productos</h5>
+    <div class="card" x-data='{material: $resultados_json, regresar: function (url) {
+        window.location.href = url;
+    },
+    devolver: function() {
+        if (confirm("¿Continuar con la devolución del material?")) {
+            document.getElementById("formulario-lector").submit();
+        }
+    }
+}'>
+        <div class="card-header text-white" style="background-color:#123273">
+            <h5 class="mb-0">Información material</h5>
         </div>
         <div class="card-body grid-container">
             <!-- formulario para regresar material -->
-            <form method="post" action="">
+            <form id="formulario-lector" method="post" action="">
                 <div >
                         <div class="row">
-                            <input name="IdMaterial" type="hidden" x-model="material.IdMaterial" />
-                            <div class="col-md-6">
-                                <label for="numeroInventario">N° Inventario:</label>
-                                <input name="numeroInventario" type="text" class="form-control" id="numeroInventario" x-model="material.NumeroMaster">
+                            <input name="IdMaterial" type="hidden" x-model="material.id_material" />
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="numeroInventario">N° Inventario:</label>
+                                    <input name="numeroInventario" readonly type="text" class="form-control" id="numeroInventario" x-model="material.numero_master">
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="titulo">Título:</label>
-                                <input name="titulo" type="text" class="form-control" id="titulo" x-model="material.Titulo">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="titulo">Título:</label>
+                                    <input readonly name="titulo" type="text" class="form-control" id="titulo" x-model="material.titulo">
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="ubicacionEstante">Ubicación Estante:</label>
-                                <input name="ubicacionEstante" type="text" class="form-control" id="ubicacionEstante" x-model="material.UbicacionEstante">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="ubicacionEstante">Ubicación Estante:</label>
+                                    <input readonly name="ubicacionEstante" type="text" class="form-control" id="ubicacion" x-model="material.UbicacionEstante">
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="tipoMaterial">Tipo Material:</label>
-                                <input name="tipoMaterial" type="text" class="form-control" id="tipoMaterial" x-model="material.TipoMaterial">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="tipoMaterial">Tipo Material:</label>
+                                    <input readonly name="tipoMaterial" type="text" class="form-control" id="tipoMaterial" x-model="material.tipo_material">
+                                </div>
                             </div>
-                            <div class="col-md-12">
-                                <button class="btn btn-primary" x-if="material.IdMaterial != null" type="submit">Devolver</button>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="fechaPrestamo">Fecha de Préstamo:</label>
+                                    <input readonly name="fechaPrestamo" type="text" class="form-control" id="fechaPrestamo" x-model="material.fecha_prestamo">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="diasPrestamo">Dias del Préstamo:</label>
+                                    <input readonly name="diasPrestamo" type="text" class="form-control" id="diasPrestamo" x-model="material.dias_prestamo">
+                                </div>
+                            </div>
+                            <div x-show="material.atraso != null && parseInt(material.atraso) < 0" class="col-12" >
+                                <div class="form-group has-error">
+                                    <label for="atraso">Dias de atraso:</label>
+                                    <input readonly name="atraso" type="text" class="form-control text-danger" id="atraso" x-model="material.atraso">
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <button class="btn btn-primary" :disabled="material.id_material == null" @click="devolver" type="button">Devolver</button>
+                                <button class="btn btn-danger" type="button" @click="regresar('$url_menu')">Regresar</button>
                             </div>
                         </div>
                     
                 </div>
             </form>
             
-            <!-- Mensaje cuando no hay resultados -->
-            <div x-show="material.IdMaterial == null" class="alert alert-warning text-center">
+            <div x-show="material.id_material == null && codigo_anterior != null" class="alert alert-warning text-center">
                 Material no encontrado
             </div>
         </div>
@@ -77,4 +110,3 @@ $html= <<<HTML
 HTML;
 
 echo $html;
-
