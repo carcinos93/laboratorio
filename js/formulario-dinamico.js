@@ -138,6 +138,13 @@ document.addEventListener("alpine:init", function () {
         }*/
     });
     // combinar validaciones con validaciones que vienen de la base de datos
+    var formatMessage = function (message, vars) {
+        if (vars === void 0) { vars = {}; }
+        Object.keys(vars).forEach(function (key) {
+            message = message.replace(new RegExp("{".concat(key, "}"), 'g'), String(vars[key]));
+        });
+        return message;
+    };
     var listaValidaciones = __assign(__assign({}, window.validaciones), { regex: function (value, message, regex) {
             if (message === void 0) { message = 'Valor invalido'; }
             var testRegex = new RegExp(regex);
@@ -163,6 +170,28 @@ document.addEventListener("alpine:init", function () {
                 return message;
             }
             return true;
+        }, soloNumeros: function (value, message) {
+            if (message === void 0) { message = 'Solo se permiten numeros'; }
+            if (value !== '' && !/^[0-9]+$/.test(value)) {
+                return message;
+            }
+            return true;
+        }, entreValores: function (value, message, min, max) {
+            if (message === void 0) { message = 'Valor no esta entre los valores permitidos'; }
+            var valor = Number(value);
+            var valorMin = Number(min);
+            var valorMax = Number(max);
+            if (value !== '' && (valor < valorMin || valor > valorMax)) {
+                return message;
+            }
+            return true;
+        }, contarPalabras: function (value, message, maximo) {
+            if (message === void 0) { message = 'Valor no cumple con la cantidad de palabras: {maximo}'; }
+            var palabras = value.split(' ').filter(function (palabra) { return palabra.trim() !== ''; });
+            if (value !== '' && palabras.length > maximo) {
+                return formatMessage(message, { maximo: maximo });
+            }
+            return true;
         } });
     // @ts-ignore
     Alpine.data("dialog", function () { return ({
@@ -180,22 +209,31 @@ document.addEventListener("alpine:init", function () {
             this.loading = false;
         }
     }); });
-    var baseControl = function (field, selector, required, validaciones) {
+    var baseControl = function (field, selector, required, validaciones, variable_registro) {
         if (required === void 0) { required = false; }
         if (validaciones === void 0) { validaciones = []; }
         return ({
+            isValid: false,
+            value: '',
+            field: field,
+            required: required,
+            validaciones: validaciones,
+            variable_registro: variable_registro,
             init: function () {
-                var _this = this;
-                if (this.required) {
-                    this.validaciones.push({
+                var $this = this;
+                if (!$this)
+                    return;
+                if ($this.required) {
+                    $this.validaciones.push({
                         Metodo: 'requerido',
                         Mensaje: 'Campo requerido'
                     });
                 }
-                this.initControl();
-                this.$nextTick(function () {
-                    _this.$watch('value', function (value) {
-                        _this.validate();
+                $this.initControl();
+                $this.$nextTick(function () {
+                    $this.$watch($this.variable_registro + '.' + $this.field, function (value) {
+                        $this.value = value;
+                        $this.validate();
                     });
                 });
             },
@@ -204,57 +242,111 @@ document.addEventListener("alpine:init", function () {
                 var el = this.$el.querySelector(selector);
                 return el;
             },
-            value: '',
-            field: field,
-            required: required,
-            validaciones: validaciones,
             validate: function () {
-                var _a, _b;
+                var _a, _b, _c;
                 var el = this.element();
                 if (!el)
                     return;
-                var error = (_a = el.parentElement) === null || _a === void 0 ? void 0 : _a.querySelector('.error');
+                /*const error = el.parentElement?.querySelector('.error');
                 error.textContent = '';
-                error.classList.remove('show');
-                for (var _i = 0, _c = this.validaciones; _i < _c.length; _i++) {
-                    var validacion = _c[_i];
-                    var argumentos = ((_b = validacion.Argumentos) !== null && _b !== void 0 ? _b : "").split(",");
+                error.classList.remove('show');*/
+                this.isValid = true;
+                // antes de validar los errores, se inicializa como vacio, para quitar las validaciones anteriores
+                for (var _i = 0, _d = this.validaciones; _i < _d.length; _i++) {
+                    var validacion = _d[_i];
+                    var argumentos = ((_a = validacion.Argumentos) !== null && _a !== void 0 ? _a : "").split(",");
                     var resultado = listaValidaciones[validacion.Metodo].apply(listaValidaciones, __spreadArray([this.value, validacion.Mensaje], argumentos, false));
                     if (resultado !== true) {
-                        error.textContent = resultado;
-                        error.classList.add('show');
-                        break;
+                        this.errores = (_b = this.errores) !== null && _b !== void 0 ? _b : {};
+                        this.errores[field] = (_c = this.errores[field]) !== null && _c !== void 0 ? _c : {};
+                        this.errores[field][validacion.Metodo] = resultado;
+                        //error.textContent = resultado;
+                        //error.classList.add('show');
+                        this.isValid = false;
+                    }
+                    else {
+                        if (this.errores[field] && this.errores[field][validacion.Metodo]) {
+                            delete this.errores[field][validacion.Metodo];
+                            if (Object.keys(this.errores[field]).length === 0) {
+                                delete this.errores[field];
+                            }
+                        }
                     }
                 }
             }
         });
     };
     // @ts-ignore
-    Alpine.data("textbox", function (field, required, validaciones) {
+    Alpine.data("textbox", function (field, variable_registro, required, validaciones) {
+        if (variable_registro === void 0) { variable_registro = 'registro'; }
         if (required === void 0) { required = false; }
         if (validaciones === void 0) { validaciones = []; }
-        return __assign({}, baseControl(field, "input", required, validaciones));
+        return __assign({}, baseControl(field, "input.control", required, validaciones, variable_registro));
     });
     // @ts-ignore
-    Alpine.data("textarea", function (field, required, validaciones) {
+    Alpine.data("date2", function (field, variable_registro, required, validaciones, validateConfig) {
+        if (variable_registro === void 0) { variable_registro = 'registro'; }
         if (required === void 0) { required = false; }
         if (validaciones === void 0) { validaciones = []; }
-        return __assign({}, baseControl(field, "textarea", required, validaciones));
+        var config = __assign({ onBlur: false, onInput: false }, validateConfig);
+        return __assign(__assign({}, baseControl(field, "input.control", required, validaciones, variable_registro)), { initControl: function () {
+                var $this = this;
+                // @ts-ignore
+                if (window.flatpickr && $this.element()) {
+                    // @ts-ignore
+                    var flatpickr = window.flatpickr($this.element(), {
+                        dateFormat: 'Y-m-d',
+                        locale: 'es',
+                        allowInput: true,
+                        altInput: false,
+                        altFormat: 'Y-m-d',
+                        onChange: function (selectedDates, dateStr, instance) {
+                            $this.value = dateStr;
+                            $this.validate();
+                            $this[variable_registro][$this.field] = dateStr;
+                        },
+                        onReady: function (selectedDates, dateStr, instance) {
+                            if (config.onBlur) {
+                                $this.element().addEventListener('blur', function () {
+                                    $this.value = $this.element().value;
+                                    $this.validate();
+                                });
+                            }
+                            if (config.onInput) {
+                                $this.element().addEventListener('input', function () {
+                                    $this.value = $this.element().value;
+                                    $this.validate();
+                                });
+                            }
+                        }
+                    });
+                    if ($this[variable_registro] && $this[variable_registro][$this.field] && $this[variable_registro][$this.field] !== '') {
+                        flatpickr.setDate($this[variable_registro][$this.field], true, 'Y-m-d');
+                    }
+                }
+            } });
     });
     // @ts-ignore
-    Alpine.data("select2", function (field, ismulti, required, validaciones) {
+    Alpine.data("textarea", function (field, variable_registro, required, validaciones) {
+        if (variable_registro === void 0) { variable_registro = 'registro'; }
+        if (required === void 0) { required = false; }
+        if (validaciones === void 0) { validaciones = []; }
+        return __assign({}, baseControl(field, "textarea.control", required, validaciones, variable_registro));
+    });
+    // @ts-ignore
+    Alpine.data("select2", function (field, variable_registro, ismulti, required, validaciones) {
         if (ismulti === void 0) { ismulti = false; }
         if (required === void 0) { required = false; }
         if (validaciones === void 0) { validaciones = []; }
-        return (__assign(__assign({}, baseControl(field, "select", required, validaciones)), { ismulti: ismulti, initControl: function () {
+        return (__assign(__assign({}, baseControl(field, "select.control", required, validaciones, variable_registro)), { ismulti: ismulti, initControl: function () {
                 var $this = this;
                 $($this.element()).select2({
                     allowClear: true,
                     multiple: this.ismulti
                 });
-                if ($this.registro[$this.field] && $this.registro[$this.field] !== '') {
-                    var val = $this.ismulti ? $this.registro[$this.field].split(";") : $this.registro[$this.field];
-                    console.log($this.field, val);
+                $($this.element()).val("").trigger('change');
+                if ($this[variable_registro] && $this[variable_registro][$this.field] && $this[variable_registro][$this.field] !== '') {
+                    var val = $this.ismulti ? $this[variable_registro][$this.field].split(";") : $this[variable_registro][$this.field];
                     $($this.element()).val(val);
                     $($this.element()).trigger('change');
                 }
@@ -262,8 +354,31 @@ document.addEventListener("alpine:init", function () {
                     var val = $this.ismulti ? $(e.target).val().join(";") : $(e.target).val();
                     $this.value = val;
                     //$this.$dispatch('change-select2', { value: val, field: $this.field });
-                    $this.registro[$this.field] = val;
+                    $this[variable_registro][$this.field] = val;
                 });
             } }));
+    });
+    // @ts-ignore
+    Alpine.data('gridForm', function (field, variable_registro, required, validaciones) {
+        if (variable_registro === void 0) { variable_registro = 'registro'; }
+        if (required === void 0) { required = false; }
+        if (validaciones === void 0) { validaciones = []; }
+        return __assign(__assign({}, baseControl(field, "div.control", required, validaciones, variable_registro)), { filas: [], initControl: function () {
+                // Inicializar con los datos existentes o un array vacío
+                if (this[variable_registro]) {
+                    if (this[variable_registro][this.field]) {
+                        this.filas = this[variable_registro][this.field];
+                    }
+                    else {
+                        this.filas = [];
+                        this[variable_registro][this.field] = this.filas;
+                    }
+                }
+            }, addFila: function (objetoInicial) {
+                if (objetoInicial === void 0) { objetoInicial = {}; }
+                this.filas.push(objetoInicial);
+            }, removeFila: function (index) {
+                this.filas.splice(index, 1);
+            } });
     });
 });

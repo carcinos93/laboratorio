@@ -7,6 +7,9 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 </head>
 <style>
     fieldset {
@@ -19,6 +22,7 @@
     legend {
         font-weight: bold;
         margin-left: 10px;
+        width: auto;border: 0;
     }
 
     div[x-data="textbox"] {
@@ -29,15 +33,14 @@
     .error {
         color: #ce2525ff;
         font-size: 0.8em;
-        display: none;
     }
 
-    .error::before {
+    .error span::before {
         content: "*";
     }
 
-    .error.show {
-        display: block;
+    .gridForm label {
+        display: none;
     }
 </style>
 <body>
@@ -46,7 +49,7 @@
 
 require_once 'sc_functions/Formulario.php';
 
-function procesarFormulario($id_formulario, $idMaterial) {
+/*function procesarFormulario($id_formulario, $idMaterial) {
     $q_form = "select Tabla from db_biblioteca.Formulario where IdFormulario = $id_formulario";
     sc_lookup_field($ds_form, $q_form);
     $tabla = $ds_form[0]['Tabla'];
@@ -74,7 +77,7 @@ function procesarFormulario($id_formulario, $idMaterial) {
     sc_exec_sql($q_update);
     
 
-}
+}*/
 /*function textbox($campo, $incluirEtiqueta = true)
 {
     $etiqueta = $incluirEtiqueta ? "<label for='" . $campo['Nombre'] . "'>" . $campo['Nombre'] . " " . $campo['Etiqueta'] . "</label>" : "";
@@ -166,6 +169,15 @@ $campos = [
         "Descripcion" => "",
         "Requerido" => false,
         "TipoDatos" => "",
+        "Validaciones" => [
+            [
+                "Nombre" => "Solo numeros",
+                "Descripcion" => "Solo se permiten numeros",
+                "Metodo" => "soloNumeros",
+                "Argumentos" => "",
+                "Mensaje" => "El numero de ejemplares debe ser un numero"
+            ]
+        ],
         "Control" => "textbox",
         "Orden" => 50,
         'TablaColumna' => 'c_000000000005'
@@ -176,11 +188,62 @@ $campos = [
         "Descripcion" => "",
         "Requerido" => true,
         "TipoDatos" => "System.TextArea",
-        "Control" => "select2",
-        'Valores' => '1;2;3;4;5',
-        'Multiple' => true,
+        "Control" => "textarea",
         "Orden" => 60,
+        "Validaciones" => [
+            [
+                "Nombre" => "Cantidad de palabras",
+                "Descripcion" => "Cantidad de palabras",
+                "Metodo" => "contarPalabras",
+                "Argumentos" => "10",
+                "Mensaje" => "El numero de palabras debe ser menor a {maximo}"
+            ]
+        ],
         'TablaColumna' => 'c_000000000006'
+    ],
+    [
+        "Etiqueta" => "500",
+        "Nombre" => "Fecha de publicación",
+        "Descripcion" => "",
+        "Requerido" => true,
+        "TipoDatos" => "System.Date",
+        "Control" => "date2",
+        "Orden" => 70,
+        'TablaColumna' => 'c_000000000007'
+    ],
+    [
+        "Etiqueta" => "600",
+        "Nombre" => "Autores",
+        "Descripcion" => "",
+        "Multiple" => true,
+        "IdFormulario" => 5,
+        "Formulario" => [
+            [
+                "Etiqueta" => "Nombre",
+                "Nombre" => "Nombre",
+                "Descripcion" => "",
+                "Requerido" => true,
+                "TipoDatos" => "System.Text",
+                "Control" => "textbox",
+                "Orden" => 10,
+                'TablaColumna' => 'c_000000000008'
+            ],
+            [
+                "Etiqueta" => "Apellido",
+                "Nombre" => "Apellido",
+                "Descripcion" => "",
+                "Requerido" => true,
+                "TipoDatos" => "System.Text",
+                "Control" => "textbox",
+                "Orden" => 20,
+                'TablaColumna' => 'c_000000000009'
+            ]
+        ],
+        "Requerido" => true,
+        "TipoDatos" => "System.List",
+        "Control" => "gridForm",
+        "Orden" => 80,
+        'TablaColumna' => 'c_000000000008'
     ]
 ];
 
@@ -188,7 +251,8 @@ $registro = [
     [
         "__id" => "0",
         "c_000000000006" => "3;4;5",
-        'c_000000000002' => '123'
+        'c_000000000002' => '123',
+        'c_000000000007' => ''
     ]
 ];
 //sc_lookup($registro, "SELECT * FROM db_biblioteca.DatosMaterial_000000000002 WHERE IdDatosMaterial = 1");
@@ -221,13 +285,13 @@ $grupos = array_reduce($campos, function ($arreglo, $item) {
 ?>
 <div class="container">
     <?php /** Al usar alpinejs se debe pasar el registro como parametro al componente para que sea reactivo */ ?>
-    <div class="row" x-data='{ registro: <?=  json_encode($registro[0]) ?> }' @change-select2="registro[$event.detail.field] = $event.detail.value">
+    <div class="row" x-data='{ errores: {}, registro: <?=  json_encode($registro[0]) ?> }' @change-select2="registro[$event.detail.field] = $event.detail.value">
 
         <?php foreach ($grupos as $etiqueta => $campos) { ?>
             <?php if (count($campos) == 1) { ?>
                 <div class="col-12">
-                    <? if (method_exists('Formulario', $campos[0]['Control'])) { ?>
-                        <?= Formulario::{$campos[0]['Control']}($campos[0], true) ?>
+                    <? if (function_exists($campos[0]['Control'])) { ?>
+                        <?= call_user_func($campos[0]['Control'], $campos[0], true) ?>
                     <? } else { ?>
                         <div class="col-12">
                             <p>Error: No se encontro el control "<?= $campos[0]['Control'] ?>"</p>
@@ -239,8 +303,8 @@ $grupos = array_reduce($campos, function ($arreglo, $item) {
                     <fieldset>
                         <legend><?= $etiqueta ?></legend>
                         <?php foreach ($campos as $campo) { ?>
-                            <? if (method_exists('Formulario', $campo['Control'])) { ?>
-                                <?= Formulario::{$campo['Control']}($campo, false) ?>
+                            <? if (function_exists($campo['Control'])) { ?>
+                                <?= call_user_func($campo['Control'], $campo, false) ?>
                             <? } else { ?>
                                 <div class="col-12">
                                     <p>Error: No se encontro el control "<?= $campo['Control'] ?>"</p>
@@ -252,7 +316,10 @@ $grupos = array_reduce($campos, function ($arreglo, $item) {
             <?php } ?>
         <?php } ?>
 
+        <pre x-text="JSON.stringify(errores, null, 2)"></pre>
         <pre x-text="JSON.stringify(registro, null, 2)"></pre>
+        <br>
+        <button type="button" @click="ejecutarApi(registro, 'form-proceso.php')">Enviar</button>
     </div>
 </div>
 

@@ -43,19 +43,21 @@ function sc_sql_total_filas($tabla, $condiciones = "", $group_by = "", $agrupado
     return $resultado;
 }
 
-function sc_sql_insert($tabla, $valores = []) {
-    $variables =[ 
-        "{now}" => "now()",
+
+
+function sc_sql_insert($_sc_sql_tabla, $_sc_sql_valores = []) {
+    $_sc_sql_variables =[ 
+        "{now}" => "getdate()",
     ];
-    $q_campos = implode(", ", array_keys($valores));
-    $q_valores = implode(", ", array_map(function ($v) use ($variables) {
+    $q_campos = implode(", ", array_keys($_sc_sql_valores));
+    $q_valores = implode(", ", array_map(function ($v) use ($_sc_sql_variables) {
         $value = $v;
 
         if (is_null($v)) {
             $value = "NULL";
         } 
-        elseif (isset($variables[$v])) {
-            $value = $variables[$v];
+        elseif (isset($_sc_sql_variables[$v])) {
+            $value = $_sc_sql_variables[$v];
         }
         elseif (is_numeric($v)) {
             $value = $v;
@@ -67,12 +69,16 @@ function sc_sql_insert($tabla, $valores = []) {
         
         return $value;
 
-    }, $valores));
+    }, $_sc_sql_valores));
 
-    $query = "INSERT INTO $tabla ($q_campos) VALUES ($q_valores)";
+    $query = "INSERT INTO $_sc_sql_tabla ($q_campos) VALUES ($q_valores)";
     sc_exec_sql($query);
-}
 
+    // retornar el ultimo id generador
+    sc_lookup_field(ds_last_id, "SELECT SCOPE_IDENTITY()");
+    return empty({ds_last_id}) ? null : {ds_last_id}[0][0];
+
+}
 function sc_sql_update($tabla, $valores = [], $condiciones = "") {
     $variables =[ 
         "{now}" => "now()",

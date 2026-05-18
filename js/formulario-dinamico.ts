@@ -8,10 +8,14 @@ interface IBaseControl {
         element: () => HTMLElement;
         value: string;
         field: string;
+        variable_registro: string;
         required: boolean;
         validaciones: Array<Object>;
         validate: () => void;
+        isValid: boolean;
         $dispatch?: (event: string, detail?: any) => void;
+        $watch?: (property: string, callback: (value: any, oldValue: any) => void) => void;
+        errores?: { [index: string]: Array<string> };
         registro?: { [index: string]: string | number | boolean | Array<string> };
     }
 interface IBaseControlSelect extends IBaseControl {
@@ -146,7 +150,12 @@ document.addEventListener("alpine:init", () => {
         }*/
     })
     // combinar validaciones con validaciones que vienen de la base de datos
-    
+    const formatMessage = (message:string, vars: any = {}) => {
+        Object.keys(vars).forEach((key) => {
+            message = message.replace(new RegExp(`{${key}}`, 'g'), String(vars[key]));
+        })
+        return message;
+    }
     const listaValidaciones = {
         // @ts-ignore
         ...window.validaciones,
@@ -174,7 +183,30 @@ document.addEventListener("alpine:init", () => {
                 return message;
             }
             return true;
-        }}
+        },
+        soloNumeros: (value: string, message: string = 'Solo se permiten numeros') => {
+            if (value !== '' && !/^[0-9]+$/.test(value)) {
+                return message;
+            }
+            return true;
+        },
+        entreValores: (value: any, message: string = 'Valor no esta entre los valores permitidos', min: any, max: any) => {
+            const valor = Number(value);
+            const valorMin = Number(min);
+            const valorMax = Number(max);
+            if (value !== '' && (valor < valorMin || valor > valorMax)) {
+                return message;
+            }
+            return true;
+        },
+        contarPalabras: (value: string, message: string = 'Valor no cumple con la cantidad de palabras: {maximo}', maximo: number) => {
+            const palabras = value.split(' ').filter((palabra: string) => palabra.trim() !== '');
+            if (value !== '' && palabras.length > maximo) {
+                return formatMessage(message, {maximo});
+            }
+            return true;
+        }
+    }
     
 
 
@@ -195,18 +227,27 @@ document.addEventListener("alpine:init", () => {
         }
     }))
 
-    const baseControl = (field: string,selector: string, required: boolean = false, validaciones: Array<Object> = []): IBaseControl => ({
+    const baseControl = (field: string,selector: string, required: boolean = false, validaciones: Array<Object> = [], variable_registro: string): IBaseControl => ({
+        isValid: false,
+        value: '',
+        field: field,
+        required: required,
+        validaciones: validaciones,
+        variable_registro: variable_registro,
         init() {
-            if (this.required) {
-                this.validaciones.push({
+            let $this = this; 
+            if (!$this) return;
+            if ($this.required) {
+                $this.validaciones.push({
                     Metodo: 'requerido',
                     Mensaje: 'Campo requerido',
                 })
             }
-            this.initControl();
-            this.$nextTick(() => {
-                this.$watch('value', (value: any) => {
-                    this.validate()
+            $this.initControl();
+            $this.$nextTick(() => {
+                $this.$watch($this.variable_registro + '.' + $this.field, (value: any) => {
+                    $this.value = value;
+                    $this.validate()
                 });
             });
 
@@ -216,40 +257,104 @@ document.addEventListener("alpine:init", () => {
             const el = this.$el.querySelector(selector);
             return el;
         },
-        value: '',
-        field: field,
-        required: required,
-        validaciones: validaciones,
+
         validate() {
             const el: HTMLElement = this.element();
             if (!el) return; 
-            const error = el.parentElement?.querySelector('.error');
+                /*const error = el.parentElement?.querySelector('.error');
                 error.textContent = '';
-                error.classList.remove('show');
+                error.classList.remove('show');*/
+                this.isValid = true;
+                // antes de validar los errores, se inicializa como vacio, para quitar las validaciones anteriores
                 for (const validacion of this.validaciones) {
+
                     const argumentos = (validacion.Argumentos ?? "").split(",");
                     const resultado = listaValidaciones[validacion.Metodo](this.value, validacion.Mensaje, ...argumentos);
                     if (resultado !== true) {
-                        error.textContent = resultado;
-                        error.classList.add('show');
-                        break;
+                        this.errores = this.errores ?? {};
+                        this.errores[field] = this.errores[field] ?? {};
+                        this.errores[field][validacion.Metodo] = resultado;
+                        //error.textContent = resultado;
+                        //error.classList.add('show');
+                        this.isValid = false;
+                    } else {
+                        if (this.errores[field] && this.errores[field][validacion.Metodo]) {
+                            delete this.errores[field][validacion.Metodo];
+                            if (Object.keys(this.errores[field]).length === 0) {
+                                delete this.errores[field];
+                            }
+                        }
                     }
                 }
             
         }
     })
     // @ts-ignore
-    Alpine.data("textbox", (field: string, required: boolean = false, validaciones: Array<Object> = []) => {
-        return {...baseControl(field,"input",required, validaciones) };
+    Alpine.data("textbox", (field: string, variable_registro: string = 'registro', required: boolean = false, validaciones: Array<Object> = []) => {
+        return {...baseControl(field,"input.control",required, validaciones, variable_registro) };
     })
 
     // @ts-ignore
-    Alpine.data("textarea", (field: string, required: boolean = false, validaciones: Array<Object> = []) => {
-        return {...baseControl(field,"textarea",required, validaciones) };
+    Alpine.data("date2", (field: string, variable_registro: string = 'registro', required: boolean = false, validaciones: Array<Object> = [], validateConfig?: {
+        onBlur?: boolean,
+        onInput?: boolean,
+    }) => {
+        let config = {
+            onBlur: false,
+            onInput: false,
+            ...validateConfig
+        }
+        return {...baseControl(field,"input.control",required, validaciones, variable_registro),    
+        
+        initControl() {
+            var $this: IBaseControl = this ;
+            // @ts-ignore
+            if (window.flatpickr && $this.element()) {
+                // @ts-ignore
+                const flatpickr = window.flatpickr($this.element(), {
+                    dateFormat: 'Y-m-d',
+                    locale: 'es',
+                    allowInput: true,
+                    altInput: false,
+                    altFormat: 'Y-m-d',
+                    onChange: (selectedDates: any[], dateStr: string, instance: any) => {
+                        $this.value = dateStr;
+                        $this.validate();
+                        $this[variable_registro][$this.field] = dateStr;
+                    },
+                    onReady: (selectedDates: any[], dateStr: string, instance: any) => {
+                        if (config.onBlur) {
+                            $this.element().addEventListener('blur', () => {
+                                $this.value = ($this.element() as any).value
+                                $this.validate();
+                            });
+                        }
+                        if (config.onInput) {
+                            $this.element().addEventListener('input', () => {
+                                $this.value = ($this.element() as any).value
+                                $this.validate();
+                            });
+                        }
+                    }
+                });
+       
+                if ($this[variable_registro] && $this[variable_registro][$this.field] && $this[variable_registro][$this.field] !== '') {
+                    flatpickr.setDate($this[variable_registro][$this.field], true, 'Y-m-d');
+                 
+                }
+                
+            }
+        },
+    }
+    })
+
+    // @ts-ignore
+    Alpine.data("textarea", (field: string, variable_registro: string = 'registro',required: boolean = false, validaciones: Array<Object> = []) => {
+        return {...baseControl(field,"textarea.control",required, validaciones, variable_registro) };
     })
     // @ts-ignore
-    Alpine.data("select2", (field: string, ismulti: boolean = false, required: boolean = false, validaciones: Array<Object> = []): IBaseControlSelect => ({
-        ...baseControl(field,"select",required, validaciones),
+    Alpine.data("select2", (field: string, variable_registro: string, ismulti: boolean = false, required: boolean = false, validaciones: Array<Object> = []): IBaseControlSelect => ({
+        ...baseControl(field,"select.control",required, validaciones, variable_registro),
         ismulti: ismulti,
         initControl() {
             var $this: IBaseControlSelect = this ;
@@ -258,9 +363,10 @@ document.addEventListener("alpine:init", () => {
                 multiple: this.ismulti,
 
             });
-            if ($this.registro[$this.field] && $this.registro[$this.field] !== '') {
-                const val = $this.ismulti ? ($this.registro[$this.field] as string).split(";") : $this.registro[$this.field];
-                console.log($this.field, val);
+            $($this.element()).val("").trigger('change');
+
+            if ($this[variable_registro] && $this[variable_registro][$this.field] && $this[variable_registro][$this.field] !== '') {
+                const val = $this.ismulti ? ($this[variable_registro][$this.field] as string).split(";") : $this[variable_registro][$this.field];
                 $($this.element()).val(val as any);
                 $($this.element()).trigger('change');
             }
@@ -269,10 +375,38 @@ document.addEventListener("alpine:init", () => {
                 const val =  $this.ismulti ? $(e.target).val().join(";") : $(e.target).val();
                 $this.value = val;
                 //$this.$dispatch('change-select2', { value: val, field: $this.field });
-                $this.registro[$this.field] = val;
+                $this[variable_registro][$this.field] = val;
             });
         }
     }
+    ));
 
-    ))
+    // @ts-ignore
+    Alpine.data('gridForm', (field: string, variable_registro: string = 'registro', required: boolean = false, validaciones: Array<Object> = []) => {
+    return {
+        ...baseControl(field, "div.control", required, validaciones, variable_registro),
+        filas: [],
+        initControl() {
+
+            // Inicializar con los datos existentes o un array vacío
+            if (this[variable_registro] ) {
+                if (this[variable_registro][this.field]) {
+                    this.filas = this[variable_registro][this.field];
+                } else {
+                    this.filas = [];
+                    this[variable_registro][this.field] = this.filas;
+                }
+            }
+        },
+
+        addFila(objetoInicial: any = {}) {
+            this.filas.push(objetoInicial);
+        },
+
+        removeFila(index: number) {
+            this.filas.splice(index, 1);
+        }
+    };
+});
+   
 })

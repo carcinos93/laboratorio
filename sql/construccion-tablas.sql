@@ -1,3 +1,10 @@
+USE [BD_SICASYS]
+GO
+/****** Object:  StoredProcedure [db_biblioteca].[sp_Construccion_Tablas]    Script Date: 5/10/2026 1:34:21 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 
 
 ALTER procedure [db_biblioteca].[sp_Construccion_Tablas]
@@ -36,6 +43,7 @@ while (select count(*) from #tablas) > 0
 begin
     begin try
         select @tabla = tabla, @IdFormulario = IdFormulario from #tablas;
+        -- seleccionar todos los campos del formulario no incluir gridForm, en caso de ser gridForm se debe crear una tabla por cada gridForm
         insert into #columnas (IdFormularioCampo, nombre, tipo, requerido, descripcion)
         select fc.IdFormularioCampo, concat('c_', right(concat('000000000000', fc.IdCampo), 12)), 
         case td.Nombre 
@@ -52,7 +60,8 @@ begin
         end, Requerido, c.Descripcion
         from db_biblioteca.FormularioCampo fc inner join db_biblioteca.Campo c on c.IdCampo = fc.IdCampo 
         inner join db_sistema.TipoDato td on c.IdTipoDato = td.IdTipoDato
-        where fc.IdFormulario = @IdFormulario and fc.audRegistroEliminado = 0;
+        where fc.IdFormulario = @IdFormulario and fc.audRegistroEliminado = 0
+        and c.[Control] not in ('gridForm');
         declare @columnas nvarchar(max), @script_create nvarchar(max), @script_alter nvarchar(max), @script_drop nvarchar(max),
         @script_count nvarchar(max), @count int;
         select @columnas = string_agg(concat('[', nombre, '] ', tipo), ', ') from #columnas;
@@ -62,13 +71,14 @@ begin
         select @comentarios = string_agg(concat('comment on column db_biblioteca.', @tabla, '.', nombre, ' is ''', replace(descripcion, '''', ''''''), ''''), '; ') from #columnas
         where descripcion is not null and descripcion != '';
         --print @comentarios;
-        exec(@comentarios);
+        --exec(@comentarios);
 
         -- si tabla existe pero no tiene datos, eliminarla y volver a crearla
         if object_id('db_biblioteca.' + @tabla) is not null
         begin
             set @script_count = concat('select @count = count(*) from db_biblioteca.', @tabla);
             exec [sp_executesql] @script_count, N'@count int output', @count output;
+			print concat('Tiene registros ',  @count);
             if @count = 0
             begin
                 set @script_drop = concat('drop table db_biblioteca.', @tabla);
@@ -80,19 +90,19 @@ begin
             -- si existe la tabla, verificar insertar las columnas que no existen
             declare @columnas_no_existentes nvarchar(max);
             select @columnas_no_existentes = string_agg(concat('[', nombre, '] ', tipo), ', ') from #columnas where nombre not in (
-                select nombre from sys.columns where object_id = object_id('db_biblioteca.' + @tabla)
+                select [name] collate SQL_Latin1_General_CP1_CI_AS from sys.columns where object_id = object_id('db_biblioteca.' + @tabla)
             );
             if @columnas_no_existentes is not null
             begin
                 set @script_alter = concat('alter table [db_biblioteca].[', @tabla, '] add ', @columnas_no_existentes);
-                --print @script_alter;
+                print @script_alter;
                 exec(@script_alter);
             end
         end
         else
         begin
             set @script_create = concat('create table [db_biblioteca].[', @tabla, '] ([IdDatosMaterial] int identity(1,1) primary key, [IdFormulario] int, [IdMaterial] int, ', @columnas, ', [audRegistroEliminado] bit, [audFecCreacion] datetime, [audUsuCreacion] varchar(100), [audFecUltMod] datetime, [audUsuUltMod] varchar(100))');
-            --print @script_create;
+            print @script_create;
             exec(@script_create);
 
         end
@@ -102,7 +112,7 @@ begin
             -- crear las llaves foraneas de la tabla
             declare @sql_fk nvarchar(max);
             set @sql_fk = concat('alter table [db_biblioteca].[', @tabla, '] add constraint [FK_', @tabla, '_Material] foreign key (IdMaterial) references db_biblioteca.Material (IdMaterial)');
-            --print @sql_fk;
+            print @sql_fk;
             exec(@sql_fk);
         end
 
